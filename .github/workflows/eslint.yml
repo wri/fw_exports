@@ -1,0 +1,29 @@
+name: eslint
+
+on: [pull_request]
+
+jobs:
+  docker:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.head_ref }}
+
+    - name: Start containers
+      run: make up-and-build
+
+    - name: Run eslint
+      run : make lint
+
+    - name: Commit prettier changes
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "auto commit: apply eslint fixes"
+
+    - name: Stop containers
+      if: always()
+      run: make down

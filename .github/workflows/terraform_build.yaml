@@ -1,0 +1,44 @@
+name: Run tests and apply terraform changes for current branch
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        ./scripts/setup
+    - name: Deploy production
+      if: success() && github.ref == 'refs/heads/production'
+      env:
+        ENV: production
+        AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_production }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_production }}
+        AWS_REGION: ${{ secrets.aws_region_production }}
+      run: |
+        ./scripts/infra plan
+        ./scripts/infra apply
+    - name: Deploy staging
+      if: success() && github.ref == 'refs/heads/staging'
+      env:
+        ENV: staging
+        AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_staging }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_staging }}
+        AWS_REGION: ${{ secrets.aws_region_staging }}
+      run: |
+        ./scripts/infra plan
+        ./scripts/infra apply
+    - name: Deploy dev
+      if: success() && github.ref == 'refs/heads/dev'
+      env:
+        ENV: dev
+        AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_dev }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_dev }}
+        AWS_REGION: ${{ secrets.aws_region_dev }}
+      run: |
+        ./scripts/infra plan
+        ./scripts/infra apply

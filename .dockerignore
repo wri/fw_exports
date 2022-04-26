@@ -1,0 +1,6 @@
+.github/*
+terraform/*
+scripts/*
+node_modules/
+dist/
+.idea/

@@ -1,0 +1,9 @@
+{
+  "service": {
+    "port": "3000"
+  },
+  "logger": {
+    "name": "fw-logger",
+    "level": "debug"
+  }
+}
