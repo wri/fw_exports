@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Grant Permission
+      run: |
+        chmod +x ./scripts/*
     - name: Destroy state and delete production workspace
       if: contains(github.event.ref_type, 'branch') &&  github.event.ref == 'refs/heads/production'
       env:

@@ -9,6 +9,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Grant Permission
+      run: |
+        chmod +x ./scripts/*
     - name: Install dependencies
       run: |
         ./scripts/setup
