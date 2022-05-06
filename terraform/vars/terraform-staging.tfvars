@@ -1,3 +1,4 @@
+container_port            = "80"
 environment               = "staging"
 log_level                 = "info"
 desired_count             = 1

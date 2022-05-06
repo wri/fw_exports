@@ -1,3 +1,4 @@
+container_port            = "80"
 environment               = "dev"
 log_level                 = "debug"
 desired_count             = 1
