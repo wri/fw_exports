@@ -18,7 +18,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_production }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_production }}
         AWS_REGION: ${{ secrets.aws_region_production }}
-      run: ./scripts/infra plan
+        EXPORTS_S3_ACCESS_KEY_ID: ${{ secrets.exports_s3_access_key_id }}
+        EXPORTS_S3_SECRET_ACCESS_KEY: ${{ secrets.exports_s3_secret_access_key }}
+      run: ./scripts/infra plan -var "s3_access_key_id=${EXPORTS_S3_ACCESS_KEY_ID}" \
+                                -var "s3_secret_access_key=${EXPORTS_S3_SECRET_ACCESS_KEY}"
     - name: Plan staging
       if: github.base_ref == 'staging'
       env:
@@ -26,7 +29,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_staging }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_staging }}
         AWS_REGION: ${{ secrets.aws_region_staging }}
-      run: ./scripts/infra plan
+        EXPORTS_S3_ACCESS_KEY_ID: ${{ secrets.exports_s3_access_key_id }}
+        EXPORTS_S3_SECRET_ACCESS_KEY: ${{ secrets.exports_s3_secret_access_key }}
+      run: ./scripts/infra plan -var "s3_access_key_id=${EXPORTS_S3_ACCESS_KEY_ID}" \
+                                -var "s3_secret_access_key=${EXPORTS_S3_SECRET_ACCESS_KEY}"
     - name: Plan dev
       if: github.base_ref == 'dev'
       env:
@@ -34,5 +40,8 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.aws_key_dev }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_dev }}
         AWS_REGION: ${{ secrets.aws_region_dev }}
-      run: ./scripts/infra plan
+        EXPORTS_S3_ACCESS_KEY_ID: ${{ secrets.exports_s3_access_key_id }}
+        EXPORTS_S3_SECRET_ACCESS_KEY: ${{ secrets.exports_s3_secret_access_key }}
+      run: ./scripts/infra plan -var "s3_access_key_id=${EXPORTS_S3_ACCESS_KEY_ID}" \
+                                -var "s3_secret_access_key=${EXPORTS_S3_SECRET_ACCESS_KEY}"
 
