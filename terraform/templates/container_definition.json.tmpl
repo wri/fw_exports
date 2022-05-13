@@ -23,12 +23,24 @@
     {
       "name": "REDIS_ENDPOINT",
       "value": "${redis_endpoint}"
+    },
+    {
+      "name" : "S3_ACCESS_KEY_ID",
+      "value" : "${s3_access_key_id}"
+    },
+    {
+      "name" : "S3_BUCKET",
+      "value" : "${s3_bucket}"
     }
   ],
   "secrets": [
     {
       "name": "DB_SECRET",
       "valueFrom": "${db_secret_arn}"
+    },
+    {
+      "name" : "S3_SECRET_ACCESS_KEY",
+      "value" : "${s3_secret_access_key}"
     }
   ],
   "portMappings": [

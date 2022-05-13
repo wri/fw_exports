@@ -62,16 +62,19 @@ module "fargate_autoscaling" {
 data "template_file" "container_definition" {
   template = file("${path.root}/templates/container_definition.json.tmpl")
   vars = {
-    environment       = var.environment
-    aws_region        = var.region
-    image = "${module.app_docker_image.repository_url}:${local.container_tag}"
-    container_name = var.project_prefix
-    container_port = var.container_port
-    log_group = aws_cloudwatch_log_group.default.name
-    log_level         = var.log_level
-    db_secret_arn = data.terraform_remote_state.core.outputs.document_db_secrets_arn
-    data_bucket = data.terraform_remote_state.fw_core.outputs.data_bucket
-    redis_endpoint = data.terraform_remote_state.core.outputs.redis_replication_group_primary_endpoint_address
+    environment             = var.environment
+    aws_region              = var.region
+    image                   = "${module.app_docker_image.repository_url}:${local.container_tag}"
+    container_name          = var.project_prefix
+    container_port          = var.container_port
+    log_group               = aws_cloudwatch_log_group.default.name
+    log_level               = var.log_level
+    db_secret_arn           = data.terraform_remote_state.core.outputs.document_db_secrets_arn
+    data_bucket             = data.terraform_remote_state.fw_core.outputs.data_bucket
+    redis_endpoint          = data.terraform_remote_state.core.outputs.redis_replication_group_primary_endpoint_address
+    s3_bucket               = var.s3_bucket
+    s3_access_key_id        = var.s3_access_key_id
+    s3_secret_access_key    = var.s3_secret_access_key
   }
 
 }

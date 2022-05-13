@@ -5,5 +5,8 @@
   "logger": {
     "name": "fw-logger",
     "level": "debug"
+  },
+  "s3":{
+    "folder": "exports"
   }
 }
