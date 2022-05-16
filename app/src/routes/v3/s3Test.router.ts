@@ -2,7 +2,7 @@ import Router from "koa-router";
 import createShareableLink from "services/s3.service";
 
 const router = new Router({
-  prefix: "/s3Test"
+  prefix: "/exports"
 });
 
 router.get("/fileURL", async ctx => {
