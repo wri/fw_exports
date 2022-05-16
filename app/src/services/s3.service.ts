@@ -5,7 +5,7 @@ import config from "config";
 import logger from "../logger";
 
 const s3Client = new S3Client({
-  // region: "REGION",
+  region: config.get("s3.region"),
   credentials: {
     accessKeyId: config.get("s3.accessKeyId"),
     secretAccessKey: config.get("s3.secretAccessKey")
@@ -21,7 +21,7 @@ const createShareableLink = async ({ extension, body }: IConfig) => {
   const bucketParams: PutObjectCommandInput = {
     Bucket: config.get("s3.bucket"),
     // Specify the name of the new object.
-    Key: `${config.get("s3.folder")}/${uuid}${extension}`,
+    Key: `${config.get("s3.folder")}/${uuid()}${extension}`,
     // Content of the new object.
     Body: body,
     ACL: "public-read"
@@ -44,7 +44,7 @@ const createShareableLink = async ({ extension, body }: IConfig) => {
 
     // Create the presigned URL.
     return await getSignedUrl(s3Client, command, {
-      expiresIn: 60 * 60
+      expiresIn: 60 * 60 // 1 hour
     });
   } catch (err) {
     logger.error("Error creating presigned URL", err);
