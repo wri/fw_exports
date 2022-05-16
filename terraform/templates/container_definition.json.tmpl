@@ -31,16 +31,16 @@
     {
       "name" : "S3_BUCKET",
       "value" : "${s3_bucket}"
+    },
+    {
+      "name" : "S3_SECRET_ACCESS_KEY",
+      "value" : "${s3_secret_access_key}"
     }
   ],
   "secrets": [
     {
       "name": "DB_SECRET",
       "valueFrom": "${db_secret_arn}"
-    },
-    {
-      "name" : "S3_SECRET_ACCESS_KEY",
-      "value" : "${s3_secret_access_key}"
     }
   ],
   "portMappings": [
