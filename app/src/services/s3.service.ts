@@ -44,7 +44,7 @@ const createShareableLink = async ({ extension, body }: IConfig) => {
 
     // Create the presigned URL.
     return await getSignedUrl(s3Client, command, {
-      expiresIn: 60 * 60 // 1 hour
+      expiresIn: 60 * 60 * 24 // 1 day
     });
   } catch (err) {
     logger.error("Error creating presigned URL", err);
