@@ -20,7 +20,7 @@ const loadAPI = (app: Koa, path: string, pathApi?: string) => {
     const stat = fs.statSync(newPath);
     if (!stat.isDirectory()) {
       if (file.lastIndexOf(".router.js") !== -1 || file.lastIndexOf(".router.ts") !== -1) {
-        if (file === "index.router.ts" || file === "index.router.ts") {
+        if (file === "index.router.js" || file === "index.router.ts") {
           existIndexRouter = true;
         } else {
           logger.debug("Loading route %s, in path %s", newPath, pathApi);
