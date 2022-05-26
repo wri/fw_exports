@@ -72,6 +72,8 @@ data "template_file" "container_definition" {
     db_secret_arn           = data.terraform_remote_state.core.outputs.document_db_secrets_arn
     data_bucket             = data.terraform_remote_state.fw_core.outputs.data_bucket
     redis_endpoint          = data.terraform_remote_state.core.outputs.redis_replication_group_primary_endpoint_address
+    forms_api_url           = var.forms_api_url
+    control_tower_url = var.control_tower_url
     s3_bucket               = var.s3_bucket
     s3_access_key_id        = var.s3_access_key_id
     s3_secret_access_key    = var.s3_secret_access_key
