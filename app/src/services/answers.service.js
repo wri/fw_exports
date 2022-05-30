@@ -4,6 +4,27 @@ import axios from "axios";
 const loggedInUserService = require("./LoggedInUserService");
 
 class AnswerService {
+  static async getTemplate(id) {
+    logger.info(`Getting template with id ${id}`);
+    try {
+      const baseURL = config.get("formsAPI.url");
+      const response = await axios.default({
+        baseURL,
+        url: `/reports/${id}`,
+        method: "GET",
+        headers: {
+          authorization: loggedInUserService.token
+        }
+      });
+      const template = response.data;
+      logger.info("Got template", template);
+      return template && template.data;
+    } catch (e) {
+      logger.error("Error while fetching template", e);
+      return null; // log the error but still return
+    }
+  }
+
   static async getAnswer(params) {
     const { templateid, answerid } = params;
     logger.info(`Getting answer with id ${answerid} of template id ${templateid}`);
