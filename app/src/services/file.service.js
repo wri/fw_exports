@@ -20,6 +20,10 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
+    // create array of questions
+    let questions = [...template.attributes.questions];
+    //console.log("***********", questions)
+
     // flatten object
     for await (const record of payload) {
       for (const property in record.attributes) {
@@ -27,30 +31,36 @@ class FileService {
       }
 
       if (fields.includes("questions")) {
-        // make fields for each question
-        for await (const question of template.attributes.questions) {
-          const questionLabel = question.label[record.attributes.language];
-          const questionAnswer = record.responses.find(response => response.name === question.name);
+        // loop over responses
+        for await (const response of record.responses) {
+          // find the question in questions, if not found, add
+          let question = questions.find(question => question.name === response.name);
+          if (!question) {
+            question = { name: response.name, label: { [template.attributes.defaultLanguage]: response.name } };
+            questions.push(question);
+          }
           // check if the answer is an image
-          if (questionAnswer.value && questionAnswer.value.startsWith("https://s3.amazonaws.com")) {
+          if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
             // download the image
             const image = await axios({
-              url: questionAnswer.value,
+              url: response.value,
               responseType: "stream",
               responseEncoding: "utf-8"
             });
             // save it to the directory - directory name should be name of report/name of question
-            const imagePath = `${record.attributes.reportName}/${question.name}/attachment.jpeg`;
+            const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
             archive.append(image.data, { name: imagePath });
             // add the path to the csv file
-            record[questionLabel] = imagePath;
-          } else record[questionLabel] = questionAnswer.value;
-          fields.push(questionLabel);
+            record[question.label[template.attributes.defaultLanguage]] = imagePath;
+          } else record[question.label[template.attributes.defaultLanguage]] = response.value;
         }
       }
     }
 
-    if (fields.includes("questions")) fields.splice(fields.indexOf("questions"), 1);
+    if (fields.includes("questions")) {
+      fields.splice(fields.indexOf("questions"), 1);
+      fields.push(...questions.map(question => question.label[template.attributes.defaultLanguage]));
+    }
     if (fields.includes("responses")) fields.splice(fields.indexOf("responses"), 1);
     const opts = { fields };
     const csv = parse(payload, opts);

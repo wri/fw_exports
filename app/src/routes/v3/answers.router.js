@@ -24,7 +24,10 @@ class AnswerRouter {
         file = await FileService.createCsv(ctx.payload, ctx.request.body.fields, ctx.template);
         break;
       case "fwbundle":
-        file = await FileService.createBundle(ctx.payload, ctx.request.body.fields, ctx.template);
+        file = await FileService.createBundle(ctx.payload, ctx.template);
+        break;
+      default:
+        ctx.throw(404, "Please enter a valid file type (csv or fwbundle)");
         break;
     }
 
