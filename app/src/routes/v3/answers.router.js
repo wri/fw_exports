@@ -28,7 +28,7 @@ class AnswerRouter {
         file = await FileService.createCsv(ctx.payload, ctx.request.body.fields, ctx.template);
         break;
       case "fwbundle":
-        file = await FileService.createBundle(ctx.payload, ctx.request.body.fields);
+        file = await FileService.createBundle(ctx.payload, ctx.request.body.fields, ctx.template);
         break;
     }
 
@@ -48,7 +48,7 @@ class AnswerRouter {
 const getAnswer = async (ctx, next) => {
   const answer = await AnswerService.getAnswer(ctx.request.params);
   if (!answer) ctx.throw(404, "This answer doesn't exist");
-  else ctx.payload = [answer];
+  else ctx.payload = answer;
   await next();
 }
 
