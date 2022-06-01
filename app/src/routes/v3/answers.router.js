@@ -45,7 +45,7 @@ class AnswerRouter {
       extension: `.${ctx.request.body.fileType === "fwbundle" ? "fwbundle" : "zip"}`,
       body: file
     });
-    ctx.body = URL;
+    ctx.body = {data: URL};
     ctx.status = 200;
   }
 }
