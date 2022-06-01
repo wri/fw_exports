@@ -145,7 +145,7 @@ class FileService {
           bundle.manifest.reportFiles.push({
             reportName: newRecord.reportName,
             questionName: answer.questionName,
-            size: image.headers['content-length'],
+            size: image.headers["content-length"],
             path: imagePath,
             type: "image/jpeg"
           });
