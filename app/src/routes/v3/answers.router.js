@@ -1,5 +1,6 @@
 // body of post requests look like:
 // {
+//  language: "en"
 //  fileType: csv, fwbundle
 //  fields: [ fields ]
 // }
@@ -18,10 +19,12 @@ class AnswerRouter {
   static async export(ctx) {
     let file = "";
 
+    if(!ctx.template.attributes.languages.includes(ctx.request.body.language)) ctx.throw(404,"Please enter a valid language")
+
     // create file
     switch (ctx.request.body.fileType) {
       case "csv":
-        file = await FileService.createCsv(ctx.payload, ctx.request.body.fields, ctx.template);
+        file = await FileService.createCsv(ctx.payload, ctx.request.body.fields, ctx.template, ctx.request.body.language);
         break;
       case "fwbundle":
         file = await FileService.createBundle(ctx.payload, ctx.template);

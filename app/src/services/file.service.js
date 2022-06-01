@@ -4,7 +4,7 @@ import axios from "axios";
 const streamBuffers = require("stream-buffers");
 
 class FileService {
-  static async createCsv(payload, fields, template) {
+  static async createCsv(payload, fields, template, language) {
     // fields is an array of accepted fields
     // payload is an array of objects
 
@@ -22,7 +22,6 @@ class FileService {
 
     // create array of questions
     let questions = [...template.attributes.questions];
-    //console.log("***********", questions)
 
     // flatten object
     for await (const record of payload) {
@@ -30,13 +29,13 @@ class FileService {
         record[property] = record.attributes[property];
       }
 
-      if (fields.includes("questions")) {
+      if (fields.includes("responses")) {
         // loop over responses
         for await (const response of record.responses) {
           // find the question in questions, if not found, add
           let question = questions.find(question => question.name === response.name);
           if (!question) {
-            question = { name: response.name, label: { [template.attributes.defaultLanguage]: response.name } };
+            question = { name: response.name, label: { [language]: response.name } };
             questions.push(question);
           }
           // check if the answer is an image
@@ -51,17 +50,17 @@ class FileService {
             const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
             archive.append(image.data, { name: imagePath });
             // add the path to the csv file
-            record[question.label[template.attributes.defaultLanguage]] = imagePath;
-          } else record[question.label[template.attributes.defaultLanguage]] = response.value;
+            record[question.label[language]] = imagePath;
+          } else record[question.label[language]] = response.value;
         }
       }
     }
 
-    if (fields.includes("questions")) {
-      fields.splice(fields.indexOf("questions"), 1);
-      fields.push(...questions.map(question => question.label[template.attributes.defaultLanguage]));
+    // remove "questions" from
+    if (fields.includes("responses")) {
+      fields.splice(fields.indexOf("responses"), 1);
+      fields.push(...questions.map(question => question.label[language]));
     }
-    if (fields.includes("responses")) fields.splice(fields.indexOf("responses"), 1);
     const opts = { fields };
     const csv = parse(payload, opts);
     archive.append(csv, { name: "reportAnswers.csv" });
