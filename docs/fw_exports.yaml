@@ -33,11 +33,15 @@ paths:
                 properties:
                   data:
                     type: string
+              examples:
+                example-1:
+                  value:
+                    data: string
         '401':
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
-      description: Exports a report answer and associated images given its id as either fwbundle or zipped csv
+      description: Exports a report answer and associated images given its id as either fwbundle or zipped csv. The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
       requestBody:
         $ref: '#/components/requestBodies/Export-request'
   '/v3/reports/{templateId}/exportAll':
@@ -64,7 +68,7 @@ paths:
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
-      description: Exports all report answers and associated images available to the user for the given template as either fwbundle or zipped csv
+      description: Exports all report answers and associated images available to the user for the given template as either fwbundle or zipped csv.The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
       requestBody:
         $ref: '#/components/requestBodies/Export-request'
 components:
