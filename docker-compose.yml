@@ -6,8 +6,10 @@ services:
     container_name: fw-exports-develop
     environment:
       PORT: 3000
-      S3_ACCESS_KEY_ID: myS3Key
-      S3_SECRET_ACCESS_KEY: myS3Secret
+      AUTH_URL: https://api.resourcewatch.org
+      FORMS_API_URL: https://api.resourcewatch.org/v1
+      S3_ACCESS_KEY_ID: ${myS3Key}
+      S3_SECRET_ACCESS_KEY: ${myS3Secret}
     volumes:
       - ./app:/opt/fw-exports/app
       - ./config:/opt/fw-exports/config

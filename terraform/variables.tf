@@ -71,3 +71,11 @@ variable "s3_access_key_id" {
 variable "s3_secret_access_key" {
   type = string
 }
+variable "forms_api_url" {
+  type    = string
+  default = "https://api.resourcewatch.org/v1"
+}
+variable "auth_url" {
+  type    = string
+  default = "https://api.resourcewatch.org"
+}

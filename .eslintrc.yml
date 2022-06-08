@@ -21,3 +21,4 @@ extends:
   - plugin:prettier/recommended
 rules:
   prettier/prettier: error
+  "@typescript-eslint/no-var-requires": 0

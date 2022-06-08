@@ -1,0 +1,143 @@
+openapi: 3.1.0
+x-stoplight:
+  id: b0495601c8e61
+info:
+  title: fw_exports
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+    description: Local
+paths:
+  '/v3/reports/{templateId}/exportOne/{answerId}':
+    parameters:
+      - schema:
+          type: string
+        name: templateId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: answerId
+        in: path
+        required: true
+    post:
+      summary: Export one report
+      operationId: post-v3-reports-templateId-exportOne-answerId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+              examples:
+                example-1:
+                  value:
+                    data: string
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: Exports a report answer and associated images given its id as either fwbundle or zipped csv. The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
+      requestBody:
+        $ref: '#/components/requestBodies/Export-request'
+  '/v3/reports/{templateId}/exportAll':
+    parameters:
+      - schema:
+          type: string
+        name: templateId
+        in: path
+        required: true
+    post:
+      summary: Export all reports
+      operationId: post-v3-reports-templateId-exportAll
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: Exports all report answers and associated images available to the user for the given template as either fwbundle or zipped csv.The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
+      requestBody:
+        $ref: '#/components/requestBodies/Export-request'
+components:
+  schemas: {}
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+  responses:
+    Error:
+      description: Error Response
+      content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            properties:
+              errors:
+                type: array
+                uniqueItems: true
+                minItems: 1
+                items:
+                  required:
+                    - status
+                    - detail
+                  properties:
+                    status:
+                      type: number
+                    detail:
+                      type: string
+                      minLength: 1
+            required:
+              - errors
+          examples: {}
+    Healthcheck:
+      description: Healthcheck response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              uptime:
+                type: number
+          examples: {}
+  requestBodies:
+    Export-request:
+      content:
+        application/json:
+          schema:
+            type: object
+            x-examples:
+              example-1:
+                language: en
+                fileType: csv
+                fields:
+                  - reportName
+                  - responses
+            properties:
+              language:
+                type: string
+              fileType:
+                type: string
+              fields:
+                type: array
+                items:
+                  type: string
+            required:
+              - language
+              - fileType
+              - fields
+security:
+  - Authorization: []
