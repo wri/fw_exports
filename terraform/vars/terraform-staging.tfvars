@@ -5,7 +5,7 @@ desired_count             = 1
 auto_scaling_min_capacity = 1
 auto_scaling_max_capacity = 15
 
-control_tower_url         = "https://staging-api.resourcewatch.org"
+auth_url         = "https://staging-api.resourcewatch.org"
 forms_api_url             = "https://staging-api.resourcewatch.org/v1"
 s3_bucket                 = "forest-watcher-files"
 s3_access_key_id          = "overridden_in_github_secrets"
