@@ -10,7 +10,7 @@
   "formsAPI": {
     "url": "FORMS_API_URL"
   },
-  "controlTower": {
-    "url": "CONTROL_TOWER_URL"
+  "auth": {
+    "url": "AUTH_URL"
   }
 }

@@ -26,7 +26,7 @@ class LoggedInUserService {
     }
     try {
       this.token = ctx.request.header.authorization;
-      let baseURL = config.get("controlTower.url");
+      let baseURL = config.get("auth.url");
       const getUserDetailsRequestConfig = {
         method: "GET",
         baseURL,
