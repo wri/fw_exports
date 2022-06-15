@@ -10,6 +10,15 @@
   "formsAPI": {
     "url": "FORMS_API_URL"
   },
+  "areasAPI": {
+    "url": "AREAS_API_URL"
+  },
+  "alertsAPI": {
+    "url": "ALERTS_API_URL"
+  },
+  "gfwApiKey": {
+    "apiKey": "GFW_DATA_API_KEY"
+  },
   "auth": {
     "url": "AUTH_URL"
   }

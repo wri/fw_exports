@@ -7,42 +7,22 @@
 
 const logger = require("logger").default;
 const Router = require("koa-router");
-const AnswerService = require("../../services/answers.service");
-const FileService = require("../../services/file.service");
+const AreaService = require("../../services/areas.service");
+const FileService = require("../../services/areaFile.service");
 import createShareableLink from "services/s3.service";
 
 const router = new Router({
-  prefix: "/exports/reports/:templateid"
+  prefix: "/exports/areas"
 });
 
-class AnswerRouter {
+class AreaRouter {
   static async export(ctx) {
-    let file = "";
-
-    if (!ctx.template.attributes.languages.includes(ctx.request.body.language))
-      ctx.throw(404, "Please enter a valid language");
-
     // create file
-    switch (ctx.request.body.fileType) {
-      case "csv":
-        file = await FileService.createCsv(
-          ctx.payload,
-          ctx.request.body.fields,
-          ctx.template,
-          ctx.request.body.language
-        );
-        break;
-      case "fwbundle":
-        file = await FileService.createBundle(ctx.payload, ctx.template);
-        break;
-      default:
-        ctx.throw(404, "Please enter a valid file type (csv or fwbundle)");
-        break;
-    }
+    const file = await FileService.createBundle(ctx.payload);
 
     // read the zip file and upload to s3 bucket
     const URL = await createShareableLink({
-      extension: `.${ctx.request.body.fileType === "fwbundle" ? "fwbundle" : "zip"}`,
+      extension: `.fwbundle`,
       body: file
     });
     ctx.body = { data: URL };
@@ -50,22 +30,16 @@ class AnswerRouter {
   }
 }
 
-const getAnswer = async (ctx, next) => {
-  const answer = await AnswerService.getAnswer(ctx.request.params);
-  if (!answer) ctx.throw(404, "This answer doesn't exist");
-  else ctx.payload = answer;
+const getArea = async (ctx, next) => {
+  const area = await AreaService.getArea(ctx.request.params);
+  if (!area) ctx.throw(404, "This area doesn't exist");
+  else ctx.payload = area;
   await next();
 };
 
-const getAnswers = async (ctx, next) => {
-  const answers = await AnswerService.getAnswers(ctx.request.params);
-  ctx.payload = answers;
-  await next();
-};
-
-const getTemplate = async (ctx, next) => {
-  const template = await AnswerService.getTemplate(ctx.request.params.templateid);
-  ctx.template = template;
+const getAreas = async (ctx, next) => {
+  const areas = await AreaService.getAreas(ctx.request.params);
+  ctx.payload = areas;
   await next();
 };
 
@@ -85,7 +59,7 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
   await next();
 };
 
-router.post("/exportOne/:answerid", isAuthenticatedMiddleware, getTemplate, getAnswer, AnswerRouter.export);
-router.post("/exportAll", isAuthenticatedMiddleware, getTemplate, getAnswers, AnswerRouter.export);
+router.post("/exportOne/:areaid", isAuthenticatedMiddleware, getArea, AreaRouter.export);
+router.post("/exportAll", isAuthenticatedMiddleware, getAreas, AreaRouter.export);
 
 export default router;
