@@ -8,7 +8,7 @@
 const logger = require("logger").default;
 const Router = require("koa-router");
 const AnswerService = require("../../services/answers.service");
-const FileService = require("../../services/file.service");
+const FileService = require("../../services/reportFile.service");
 import createShareableLink from "services/s3.service";
 
 const router = new Router({

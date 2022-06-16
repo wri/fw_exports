@@ -6,8 +6,11 @@ services:
     container_name: fw-exports-develop
     environment:
       PORT: 3000
-      AUTH_URL: https://api.resourcewatch.org
+      AUTH_URL: https://staging-api.resourcewatch.org
       FORMS_API_URL: https://api.resourcewatch.org/v1
+      AREAS_API_URL: "https://dev-fw-api.globalforestwatch.org/v3/forest-watcher"
+      ALERTS_API_URL: "https://staging-data-api.globalforestwatch.org"
+      GFW_DATA_API_KEY: ${gfw_data_api_key}
       S3_ACCESS_KEY_ID: ${myS3Key}
       S3_SECRET_ACCESS_KEY: ${myS3Secret}
     volumes:
@@ -19,6 +22,8 @@ services:
   test:
     build: .
     container_name: fw-exports-test
+    environment: 
+      AREAS_API_URL: http://127.0.0.1:9000
     volumes:
       - ./app:/opt/fw-exports/app
       - ./config:/opt/fw-exports/config

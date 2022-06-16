@@ -75,6 +75,10 @@ variable "forms_api_url" {
   type    = string
   default = "https://api.resourcewatch.org/v1"
 }
+variable "alerts_api_url" {
+  type    = string
+  default = "https://data-api.globalforestwatch.org"
+}
 variable "auth_url" {
   type    = string
   default = "https://api.resourcewatch.org"
