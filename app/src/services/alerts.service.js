@@ -56,6 +56,7 @@ class AlertService {
     }/latest/query/csv?format=json&geostore_origin=rw&geostore_id=${geostoreId}&sql=select latitude, longitude, ${dateKey} as "date" ${
       confidenceKey ? ", " + confidenceKey + ` as "confidence"` : ""
     } from ${tableName} ORDER BY ${dateKey} DESC LIMIT 10`; // where ${apiConfig.query.dateKey} > '${moment(minDate).format('YYYY-MM-DD')}'`;
+
     try {
       const baseURL = config.get("alertsAPI.url");
       const response = await axios.default({
@@ -63,13 +64,13 @@ class AlertService {
         url,
         method: "GET",
         headers: {
-          "x-api-key": config.get("gfwApiKey.apiKey"),
-          authorization: loggedInUserService.token
+          "x-api-key": config.get("gfwApiKey.apiKey")
+          //authorization: loggedInUserService.token
         }
       });
+
       const alerts = response.data;
-      /*       const jsonObject = await csv().fromString(alerts)
-      console.log(jsonObject) */
+
       return alerts ? await csv().fromString(alerts) : [];
     } catch (e) {
       logger.error("Error while fetching alerts", e);
