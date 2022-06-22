@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>fw_teams Docs</title>
+  <!-- Embed elements Elements via Web Component -->
+  <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css">
+
+  <script src="./js/changeEnvironment.js"></script>
+  <link rel="stylesheet" href="./css/switches.css">
+</head>
+<body>
+
+<div class="tsc-btn-container">
+  <button type="button" id="switch-prod" class="tsc-btn">Production</button>
+  <button type="button" id="switch-staging" class="tsc-btn">Staging</button>
+  <button type="button" id="switch-dev" class="tsc-btn">Dev</button>
+  <a target="_blank" id="view-raw" class="tsc-btn">Raw</a>
+</div>
+
+<elements-api
+    id="docs"
+    router="hash"
+    layout="sidebar"
+/>
+
+</body>
+</html>
