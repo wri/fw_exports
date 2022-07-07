@@ -23,8 +23,6 @@
     "bunyan": "^1.8.15",
     "config": "^3.3.7",
     "csvtojson": "^2.0.10",
-    "gdal": "^0.11.1",
-    "geojson2shp": "^0.5.0",
     "json2csv": "^5.0.7",
     "koa": "^2.13.4",
     "koa-body": "^5.0.0",
@@ -32,9 +30,7 @@
     "koa-router": "^10.1.1",
     "koa-simple-healthcheck": "^0.0.1",
     "mongoose": "^6.3.4",
-    "ogr2ogr": "^3.1.1",
     "shp-write": "^0.3.2",
-    "stream": "0.0.2",
     "stream-buffers": "^3.0.2",
     "uuid": "^8.3.2"
   },
