@@ -19,30 +19,26 @@ class AreaRouter {
   static async export(ctx) {
     let file = "";
 
+    const fields = ctx.request.body.fields || [];
+
     // create file
     switch (ctx.request.body.fileType) {
       case "geojson":
-        file = await FileService.createGeojson(
-          ctx.payload,
-        );
+        file = await FileService.createGeojson(ctx.payload);
         break;
-        case "shp":
-          file = await FileService.createShape(
-            ctx.payload,
-          );
-          break;
+      case "shp":
+        file = await FileService.createShape(ctx.payload);
+        break;
       case "fwbundle":
         file = await FileService.createBundle(ctx.payload);
         break;
       case "csv":
-        const fields = ctx.request.body.fields || []
-        file = await FileService.createCsv(ctx.payload,fields);
+        file = await FileService.createCsv(ctx.payload, fields);
         break;
       default:
         ctx.throw(400, "Please enter a valid file type (csv, geojson, fwbundle)");
         break;
     }
-
 
     // read the zip file and upload to s3 bucket
     const URL = await createShareableLink({
