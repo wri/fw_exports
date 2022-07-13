@@ -17,12 +17,32 @@ const router = new Router({
 
 class AreaRouter {
   static async export(ctx) {
+    let file = "";
+
+    const fields = ctx.request.body.fields || [];
+
     // create file
-    const file = await FileService.createBundle(ctx.payload);
+    switch (ctx.request.body.fileType) {
+      case "geojson":
+        file = await FileService.createGeojson(ctx.payload);
+        break;
+      case "shp":
+        file = await FileService.createShape(ctx.payload);
+        break;
+      case "fwbundle":
+        file = await FileService.createBundle(ctx.payload);
+        break;
+      case "csv":
+        file = await FileService.createCsv(ctx.payload, fields);
+        break;
+      default:
+        ctx.throw(400, "Please enter a valid file type (csv, geojson, fwbundle)");
+        break;
+    }
 
     // read the zip file and upload to s3 bucket
     const URL = await createShareableLink({
-      extension: `.fwbundle`,
+      extension: `.${ctx.request.body.fileType === "fwbundle" ? "fwbundle" : "zip"}`,
       body: file
     });
     ctx.body = { data: URL };

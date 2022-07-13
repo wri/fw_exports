@@ -1,7 +1,6 @@
 import config from "config";
 import logger from "../logger";
 import axios from "axios";
-const loggedInUserService = require("./LoggedInUserService");
 const csv = require("csvtojson");
 
 class AlertService {
@@ -55,7 +54,7 @@ class AlertService {
       apiConfig.datastoreId
     }/latest/query/csv?format=json&geostore_origin=rw&geostore_id=${geostoreId}&sql=select latitude, longitude, ${dateKey} as "date" ${
       confidenceKey ? ", " + confidenceKey + ` as "confidence"` : ""
-    } from ${tableName} ORDER BY ${dateKey} DESC LIMIT 10`; // where ${apiConfig.query.dateKey} > '${moment(minDate).format('YYYY-MM-DD')}'`;
+    } from ${tableName} ORDER BY ${dateKey} DESC LIMIT 1000`;
 
     try {
       const baseURL = config.get("alertsAPI.url");
@@ -65,7 +64,6 @@ class AlertService {
         method: "GET",
         headers: {
           "x-api-key": config.get("gfwApiKey.apiKey")
-          //authorization: loggedInUserService.token
         }
       });
 

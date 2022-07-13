@@ -1,4 +1,4 @@
-FROM node:16.14.2-alpine3.15
+FROM node:14
 MAINTAINER server@3sidedcube.com
 
 ENV NAME fw-exports
