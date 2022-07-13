@@ -51,12 +51,12 @@ class AnswerRouter {
 }
 
 const getAnswerSet = async (ctx, next) => {
-  const {ids} = ctx.request.body
-  let answers = []
+  const { ids } = ctx.request.body;
+  let answers = [];
   for await (const id of ids) {
     const answer = await AnswerService.getAnswer(id);
     if (!answer[0]) ctx.throw(404, "Some answers don't exist");
-    else answers.push(answer[0]); 
+    else answers.push(answer[0]);
   }
   ctx.payload = answers;
   await next();
@@ -69,17 +69,17 @@ const getAllAnswers = async (ctx, next) => {
 };
 
 const getTemplates = async (ctx, next) => {
-  let templates = []
+  let templates = [];
   // loop over all found answers and get every template related to them
   for await (const answer of ctx.payload) {
-    let templateId = answer.attributes.report
+    let templateId = answer.attributes.report;
     // do we already have that template?
-    const existing = templates.find(template => template.id === templateId)
-    if(!existing) {
+    const existing = templates.find(template => template.id === templateId);
+    if (!existing) {
       const template = await AnswerService.getTemplate(templateId);
       templates.push(template);
     }
-  };
+  }
   ctx.templates = templates;
   await next();
 };

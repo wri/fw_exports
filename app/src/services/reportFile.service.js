@@ -25,7 +25,7 @@ class FileService {
     templates.forEach(template => {
       questions.push(...template.attributes.questions);
     });
-    
+
     // flatten object
     for await (const record of payload) {
       for (const property in record.attributes) {
@@ -111,8 +111,8 @@ class FileService {
     // set templates
     templates.forEach(template => {
       bundle.templates[template.id] = template;
-    })
-    
+    });
+
     // loop over records
     for await (const record of payload) {
       let newRecord = {
