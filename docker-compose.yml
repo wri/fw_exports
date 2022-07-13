@@ -7,7 +7,7 @@ services:
     environment:
       PORT: 3000
       AUTH_URL: https://staging-api.resourcewatch.org
-      FORMS_API_URL: https://api.resourcewatch.org/v1
+      FORMS_API_URL: https://dev-fw-api.globalforestwatch.org
       AREAS_API_URL: "https://dev-fw-api.globalforestwatch.org/v3/forest-watcher"
       ALERTS_API_URL: "https://staging-data-api.globalforestwatch.org"
       GFW_DATA_API_KEY: ${gfw_data_api_key}
