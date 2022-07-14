@@ -10,7 +10,7 @@ class AnswerService {
       const baseURL = config.get("formsAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/reports/${id}`,
+        url: `/v1/reports/${id}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -26,13 +26,13 @@ class AnswerService {
   }
 
   static async getAnswer(params) {
-    const { templateid, answerid } = params;
-    logger.info(`Getting answer with id ${answerid} of template id ${templateid}`);
+    const { templateid, reportid } = params;
+    logger.info(`Getting answer with id ${reportid} of template id ${templateid}`);
     try {
       const baseURL = config.get("formsAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/reports/${templateid}/answers/${answerid}`,
+        url: `/v1/reports/${templateid}/answers/${reportid}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -47,21 +47,20 @@ class AnswerService {
     }
   }
 
-  static async getAnswers(params) {
-    const { templateid } = params;
-    logger.info(`Getting answers of template id ${templateid}`);
+  static async getAllAnswers() {
+    logger.info(`Getting all answers`);
     try {
       const baseURL = config.get("formsAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/reports/${templateid}/answers`,
+        url: `/v3/reports/getAllAnswersForUser`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
         }
       });
       const answers = response.data;
-      logger.info("Got answers", answers);
+      logger.info("Got all answers", answers);
       return answers && answers.data;
     } catch (e) {
       logger.error("Error while fetching answers", e);

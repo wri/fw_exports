@@ -4,7 +4,7 @@ import axios from "axios";
 const streamBuffers = require("stream-buffers");
 
 class FileService {
-  static async createCsv(payload, fields, template, language) {
+  static async createCsv(payload, fields, templates, language) {
     // fields is an array of accepted fields
     // payload is an array of objects
 
@@ -20,8 +20,11 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-    // create array of questions
-    let questions = [...template.attributes.questions];
+    // create array of questions. There will be lots of questions depending on the number of templates.
+    let questions = [];
+    templates.forEach(template => {
+      questions.push(...template.attributes.questions);
+    });
 
     // flatten object
     for await (const record of payload) {
@@ -75,7 +78,7 @@ class FileService {
     });
   }
 
-  static async createBundle(payload, template) {
+  static async createBundle(payload, templates) {
     // create a fwbundle
     let bundle = {
       version: 2,
@@ -105,12 +108,15 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-    // set template
-    bundle.templates[template.id] = template;
+    // set templates
+    templates.forEach(template => {
+      bundle.templates[template.id] = template;
+    });
 
     // loop over records
     for await (const record of payload) {
       let newRecord = {
+        id: record.id,
         area: {
           id: record.attributes.areaOfInterest,
           name: record.attributes.areaOfInterestName
