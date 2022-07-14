@@ -21,9 +21,8 @@ class AnswerRouter {
 
     ctx.templates.forEach(template => {
       if (!template.attributes.languages.includes(ctx.request.body.language))
-      ctx.throw(404, "Please enter a valid language for all templates");
-    })
-    
+        ctx.throw(404, "Please enter a valid language for all templates");
+    });
 
     // create file
     switch (ctx.request.body.fileType) {
