@@ -22,7 +22,7 @@ paths:
         in: path
         required: true
     post:
-      summary: Export one report
+      summary: Export some reports
       operationId: post-v3-reports-templateId-exportOne-answerId
       responses:
         '200':
