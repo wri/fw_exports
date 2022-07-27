@@ -7,17 +7,18 @@ info:
 servers:
   - url: 'http://localhost:3000'
     description: Local
+  - url: 'https://dev-fw-api.globalforestwatch.org'
+    description: Dev
+  - url: 'https://staging-fw-api.globalforestwatch.org'
+    description: Staging
+  - url: 'https://api.globalforestwatch.org'
+    description: Production
 paths:
-  '/v3/reports/{templateId}/exportOne/{answerId}':
+  '/v3/reports/{templateId}/exportSome':
     parameters:
       - schema:
           type: string
         name: templateId
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: answerId
         in: path
         required: true
     post:
@@ -41,9 +42,71 @@ paths:
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
-      description: Exports a report answer and associated images given its id as either fwbundle or zipped csv. The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
+      description: Exports a selection of report answers and associated images given its id as either fwbundle or zipped csv. The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
       requestBody:
-        $ref: '#/components/requestBodies/Export-request'
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      templateid:
+                        type: string
+                      reportid:
+                        type: string
+                language:
+                  type: string
+                fileType:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: string
+            examples:
+              example-1:
+                value:
+                  ids:
+                    - templateid: string
+                      reportid: string
+                  language: string
+                  fileType: string
+                  fields:
+                    - string
+  '/v3/areas/exportOne/{areaId}':
+    parameters:
+      - schema:
+          type: string
+        name: areaId
+        in: path
+        required: true
+    post:
+      summary: Export one area
+      operationId: post-v3-areas-exportOne-areaId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+              examples:
+                example-1:
+                  value:
+                    data: string
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: 'Exports an and associated images given its id as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export.'
+      requestBody:
+        $ref: '#/components/requestBodies/Export-areas-request'
   '/v3/reports/{templateId}/exportAll':
     parameters:
       - schema:
@@ -70,7 +133,42 @@ paths:
           $ref: '#/components/responses/Error'
       description: Exports all report answers and associated images available to the user for the given template as either fwbundle or zipped csv.The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
       requestBody:
-        $ref: '#/components/requestBodies/Export-request'
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                fileType:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: string
+        description: ''
+  /v3/areas/exportAll:
+    parameters: []
+    post:
+      summary: Export all areas
+      operationId: post-v3-areas-exportAll
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: 'Exports all areas and associated images available to the user as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export.'
+      requestBody:
+        $ref: '#/components/requestBodies/Export-areas-request'
 components:
   schemas: {}
   securitySchemes:
@@ -114,30 +212,17 @@ components:
                 type: number
           examples: {}
   requestBodies:
-    Export-request:
+    Export-areas-request:
       content:
         application/json:
           schema:
             type: object
-            x-examples:
-              example-1:
-                language: en
-                fileType: csv
-                fields:
-                  - reportName
-                  - responses
             properties:
-              language:
-                type: string
               fileType:
                 type: string
               fields:
                 type: array
                 items:
                   type: string
-            required:
-              - language
-              - fileType
-              - fields
 security:
   - Authorization: []
