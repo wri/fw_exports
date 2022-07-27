@@ -5,8 +5,6 @@ info:
   title: fw_exports
   version: '1.0'
 servers:
-  - url: 'http://localhost:3000'
-    description: Local
   - url: 'https://dev-fw-api.globalforestwatch.org'
     description: Dev
   - url: 'https://staging-fw-api.globalforestwatch.org'
@@ -23,7 +21,7 @@ paths:
         required: true
     post:
       summary: Export some reports
-      operationId: post-v3-reports-templateId-exportOne-answerId
+      operationId: post-v3-reports-templateId-exportSome
       responses:
         '200':
           description: OK
