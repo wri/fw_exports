@@ -1,5 +1,6 @@
 import Koa from "koa";
 import config from "config";
+const cors = require("@koa/cors");
 import logger from "./logger";
 import loaderRoutes from "./loaderRoutes";
 import LoggedInUserService from "./services/LoggedInUserService";
@@ -12,8 +13,14 @@ const koaBody = require("koa-body")({
 
 const app = new Koa();
 
-app.use(koaBody);
 
+app.use((ctx, next) => {
+  return next().then(function () {
+    ctx.set("Cache-Control", "private");
+  });
+});
+app.use(koaBody);
+app.use(cors());
 app.use(async (ctx, next) => {
   await LoggedInUserService.setLoggedInUser(ctx, logger);
   await next();
