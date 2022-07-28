@@ -12,7 +12,7 @@ servers:
   - url: 'https://api.globalforestwatch.org'
     description: Production
 paths:
-  '/v3/reports/{templateId}/exportSome':
+  '/v3/exports/reports/{templateId}/exportSome':
     parameters:
       - schema:
           type: string
@@ -74,7 +74,7 @@ paths:
                   fileType: string
                   fields:
                     - string
-  '/v3/areas/exportOne/{areaId}':
+  '/v3/exports/areas/exportOne/{areaId}':
     parameters:
       - schema:
           type: string
@@ -105,7 +105,7 @@ paths:
       description: 'Exports an and associated images given its id as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export.'
       requestBody:
         $ref: '#/components/requestBodies/Export-areas-request'
-  '/v3/reports/{templateId}/exportAll':
+  '/v3/exports/reports/{templateId}/exportAll':
     parameters:
       - schema:
           type: string
@@ -145,7 +145,7 @@ paths:
                   items:
                     type: string
         description: ''
-  /v3/areas/exportAll:
+  /v3/exports/areas/exportAll:
     parameters: []
     post:
       summary: Export all areas
