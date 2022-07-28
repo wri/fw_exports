@@ -12,7 +12,7 @@ const koaBody = require("koa-body")({
 });
 
 const app = new Koa();
-
+app.use(cors());
 
 app.use((ctx, next) => {
   return next().then(function () {
@@ -20,7 +20,7 @@ app.use((ctx, next) => {
   });
 });
 app.use(koaBody);
-app.use(cors());
+
 app.use(async (ctx, next) => {
   await LoggedInUserService.setLoggedInUser(ctx, logger);
   await next();
