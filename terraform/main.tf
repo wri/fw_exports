@@ -45,7 +45,7 @@ module "fargate_autoscaling" {
   ]
   task_execution_role_policies = [
     data.terraform_remote_state.core.outputs.document_db_secrets_policy_arn,
-    data.terraform_remote_state.fw_core.outputs.gfw_data_api_key_secret_policy_arn
+    data.terraform_remote_state.fw_core.outputs.gfw_data_api_key_secret_policy_arn,
   ]
   container_definition = data.template_file.container_definition.rendered
 
