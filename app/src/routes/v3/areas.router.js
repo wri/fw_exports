@@ -51,14 +51,14 @@ class AreaRouter {
 }
 
 const getArea = async (ctx, next) => {
-  const area = await AreaService.getArea(ctx.request.params);
+  const area = await AreaService.getArea(ctx.request.params.areaid);
   if (!area) ctx.throw(404, "This area doesn't exist");
-  else ctx.payload = area;
+  else ctx.payload = [area];
   await next();
 };
 
 const getAreas = async (ctx, next) => {
-  const areas = await AreaService.getAreas(ctx.request.params);
+  const areas = await AreaService.getAreas();
   ctx.payload = areas;
   await next();
 };

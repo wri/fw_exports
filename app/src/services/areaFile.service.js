@@ -93,16 +93,18 @@ class FileService {
 
     // loop over records
     for await (const record of payload) {
-      let geojson = record.attributes.geostore.geojson;
-      geojson.attributes = {
-        id: record.id,
-        name: record.attributes.name,
-        createdAt: record.attributes.createdAt,
-        image: record.attributes.image
-      };
+      if (record.attributes.geostore.geojson) {
+        let geojson = record.attributes.geostore.geojson;
+        geojson.attributes = {
+          id: record.id,
+          name: record.attributes.name,
+          createdAt: record.attributes.createdAt,
+          image: record.attributes.image
+        };
 
-      // save each geojson as new file
-      archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
+        // save each geojson as new file
+        archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
+      }
     }
 
     archive.finalize();
@@ -143,16 +145,17 @@ class FileService {
       });
 
       // format geojson data
-      let geojson = record.attributes.geostore.geojson;
-      geojson.features.forEach((feature, index) => {
-        let featureName = "feature" + index.toString();
-        // turn coordinates into simpler array
-        let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
-        let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
-        row[featureName] = wkt;
-        if (!fields.includes(featureName)) fields.push(featureName);
-      });
-
+      if (record.attributes.geostore.geojson) {
+        let geojson = record.attributes.geostore.geojson;
+        geojson.features.forEach((feature, index) => {
+          let featureName = "feature" + index.toString();
+          // turn coordinates into simpler array
+          let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+          let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
+          row[featureName] = wkt;
+          if (!fields.includes(featureName)) fields.push(featureName);
+        });
+      }
       areas.push(row);
     }
     fields.unshift("id", "name", "createdAt", "image");
@@ -185,17 +188,19 @@ class FileService {
 
     // loop over records
     for await (const record of payload) {
-      let geojson = record.attributes.geostore.geojson;
-      geojson.attributes = {
-        id: record.id,
-        name: record.attributes.name,
-        createdAt: record.attributes.createdAt,
-        image: record.attributes.image
-      };
+      if (record.attributes.geostore.geojson) {
+        let geojson = record.attributes.geostore.geojson;
+        geojson.attributes = {
+          id: record.id,
+          name: record.attributes.name,
+          createdAt: record.attributes.createdAt,
+          image: record.attributes.image
+        };
 
-      let shpfile = shpwrite.zip(geojson);
-      //let shpfile = await ConvertService.geojsonToShp(geojson)
-      archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
+        let shpfile = shpwrite.zip(geojson);
+        //let shpfile = await ConvertService.geojsonToShp(geojson)
+        archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
+      }
     }
 
     archive.finalize();
