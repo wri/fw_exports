@@ -31,11 +31,13 @@ paths:
                 example-1:
                   value:
                     data: string
+        '400':
+          $ref: '#/components/responses/Error'
         '401':
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
-      description: Exports a selection of report answers and associated images given its id as either fwbundle or zipped csv. The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
+      description: 'Exports a selection of report answers and associated images given its id as either fwbundle or zipped csv. The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required. The response is an id to poll the GET /v3/exports/reports/{id} endpoint is for the URL once the export has completed'
       requestBody:
         content:
           application/json:
@@ -69,6 +71,66 @@ paths:
                   fileType: string
                   fields:
                     - string
+  /v3/exports/reports/exportAll:
+    parameters: []
+    post:
+      summary: Export all reports
+      operationId: post-v3-reports-templateId-exportAll
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: 'Exports all report answers and associated images available to the user for the given template as either fwbundle or zipped csv.The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required. The response is an id to poll the GET /v3/exports/reports/{id} endpoint is for the URL once the export has completed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                fileType:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: string
+        description: ''
+  '/v3/exports/reports/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: ''
+      operationId: get-v3-exports-reports-id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      description: Returns the url for a given id token received from a reports export request
   '/v3/exports/areas/exportOne/{areaId}':
     parameters:
       - schema:
@@ -93,48 +155,15 @@ paths:
                 example-1:
                   value:
                     data: string
+        '400':
+          $ref: '#/components/responses/Error'
         '401':
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
-      description: 'Exports an and associated images given its id as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export.'
+      description: 'Exports an and associated images given its id as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
       requestBody:
         $ref: '#/components/requestBodies/Export-areas-request'
-  /v3/exports/reports/exportAll:
-    parameters: []
-    post:
-      summary: Export all reports
-      operationId: post-v3-reports-templateId-exportAll
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
-        '401':
-          $ref: '#/components/responses/Error'
-        '404':
-          $ref: '#/components/responses/Error'
-      description: Exports all report answers and associated images available to the user for the given template as either fwbundle or zipped csv.The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                language:
-                  type: string
-                fileType:
-                  type: string
-                fields:
-                  type: array
-                  items:
-                    type: string
-        description: ''
   /v3/exports/areas/exportAll:
     parameters: []
     post:
@@ -150,13 +179,38 @@ paths:
                 properties:
                   data:
                     type: string
+        '400':
+          $ref: '#/components/responses/Error'
         '401':
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
-      description: 'Exports all areas and associated images available to the user as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export.'
+      description: 'Exports all areas and associated images available to the user as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
       requestBody:
         $ref: '#/components/requestBodies/Export-areas-request'
+  '/v3/exports/areas/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: ''
+      operationId: get-v3-exports-areas-id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      description: Returns the url for a given id token received from an areas export request
 components:
   schemas: {}
   securitySchemes:

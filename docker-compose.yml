@@ -5,6 +5,9 @@ services:
       - "3000:3000"
     container_name: fw-exports-develop
     environment:
+      NODE_ENV: dev
+      SUPPRESS_NO_CONFIG_WARNING: "true"
+      LOGGER_LEVEL: debug
       PORT: 3000
       AUTH_URL: https://staging-api.resourcewatch.org
       FORMS_API_URL: https://dev-fw-api.globalforestwatch.org
@@ -13,23 +16,53 @@ services:
       GFW_DATA_API_KEY: ${gfw_data_api_key}
       S3_ACCESS_KEY_ID: ${myS3Key}
       S3_SECRET_ACCESS_KEY: ${myS3Secret}
+      MONGODB_HOST: mongo
+      MONGODB_PORT: 27017
+      DB_SECRET: '{ "username": "admin", "password": "password" }'
+      DB_DATABASE: fw_exports_db
+    depends_on:
+      - mongo
     volumes:
       - ./app:/opt/fw-exports/app
       - ./config:/opt/fw-exports/config
       - ./nodemon.json:/opt/fw-exports/nodemon.json
     command: yarn dev
+    networks:
+      - gfw-exports-network
 
   test:
     build: .
     container_name: fw-exports-test
     environment: 
       AREAS_API_URL: http://127.0.0.1:9000
+      MONGODB_HOST: mongo
+      MONGODB_PORT: 27017
+      DB_SECRET: '{ "username": "admin", "password": "password" }'
+      DB_DATABASE: fw_exports_db
     volumes:
       - ./app:/opt/fw-exports/app
       - ./config:/opt/fw-exports/config
       - ./nodemon.json:/opt/fw-exports/nodemon.json
       - ./jest.config.js:/opt/fw-exports/jest.config.js
     command: yarn test
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:3.4
+    container_name: fw-exports-mongo-develop
+    ports:
+      - "27026:27017"
+    environment:
+      MONGO_INITDB_DATABASE: fw_exports_db
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_USERNAME: admin
+    volumes:
+      - ./data/mongo/001_users.js:/docker-entrypoint-initdb.d/001_users.js:ro
+      - fw-exports-mongodb-data:/data/db
+    restart: always
+    networks:
+      - gfw-exports-network
 
   docs:
     build: .
@@ -39,3 +72,10 @@ services:
     volumes:
       - ./docs:/opt/fw-exports/docs
     command: yarn run docs -l 30000
+
+volumes:
+  fw-exports-mongodb-data:
+
+networks:
+  gfw-exports-network:
+    name: gfw-exports-network

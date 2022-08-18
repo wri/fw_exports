@@ -10,44 +10,71 @@ const Router = require("koa-router");
 const AnswerService = require("../../services/answers.service");
 const FileService = require("../../services/reportFile.service");
 import createShareableLink from "services/s3.service";
+const BucketURLModel = require("../../models/bucketURL.model");
+const { ObjectId } = require("mongoose").Types;
 
 const router = new Router({
   prefix: "/exports/reports"
 });
 
-class AnswerRouter {
-  static async export(ctx) {
-    let file = "";
+const exportFunction = async (id, payload, fields, templates, language, fileType) => {
+  let file = "";
 
-    ctx.templates.forEach(template => {
-      if (!template.attributes.languages.includes(ctx.request.body.language))
-        ctx.throw(404, "Please enter a valid language for all templates");
-    });
-
+  try {
     // create file
-    switch (ctx.request.body.fileType) {
+    switch (fileType) {
       case "csv":
-        file = await FileService.createCsv(
-          ctx.payload,
-          ctx.request.body.fields,
-          ctx.templates,
-          ctx.request.body.language
-        );
+        file = await FileService.createCsv(payload, fields, templates, language);
         break;
       case "fwbundle":
-        file = await FileService.createBundle(ctx.payload, ctx.templates);
+        file = await FileService.createBundle(payload, templates);
         break;
       default:
-        ctx.throw(404, "Please enter a valid file type (csv or fwbundle)");
         break;
     }
 
     // read the zip file and upload to s3 bucket
     const URL = await createShareableLink({
-      extension: `.${ctx.request.body.fileType === "fwbundle" ? "fwbundle" : "zip"}`,
+      extension: `.${fileType === "fwbundle" ? "fwbundle" : "zip"}`,
       body: file
     });
-    ctx.body = { data: URL };
+
+    const newURL = new BucketURLModel({ id: id, URL: URL });
+    newURL.save();
+  } catch (error) {
+    const newURL = new BucketURLModel({ id: id, URL: error });
+    newURL.save();
+  }
+};
+
+class AnswerRouter {
+  static async getUrl(ctx) {
+    let id = ctx.request.params.id;
+    let URL = await BucketURLModel.findOne({ id });
+    if (URL) {
+      ctx.body = { data: URL.URL };
+      BucketURLModel.deleteMany({ id: id });
+    } else ctx.body = { data: null };
+    ctx.status = 200;
+  }
+
+  static async export(ctx) {
+    const objId = new ObjectId();
+    ctx.templates.forEach(template => {
+      if (!template.attributes.languages.includes(ctx.request.body.language))
+        ctx.throw(400, "Please enter a valid language for all templates");
+    });
+    if (!["csv", "fwbundle"].includes(ctx.request.body.fileType)) ctx.throw(400, "Please enter a valid file type");
+    exportFunction(
+      objId,
+      ctx.payload,
+      ctx.request.body.fields,
+      ctx.templates,
+      ctx.request.body.language,
+      ctx.request.body.fileType
+    );
+
+    ctx.body = { data: objId };
     ctx.status = 200;
   }
 }
@@ -102,6 +129,7 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
   await next();
 };
 
+router.get("/:id", isAuthenticatedMiddleware, AnswerRouter.getUrl);
 router.post("/exportSome", isAuthenticatedMiddleware, getAnswerSet, getTemplates, AnswerRouter.export);
 router.post("/exportAll", isAuthenticatedMiddleware, getAllAnswers, getTemplates, AnswerRouter.export);
 

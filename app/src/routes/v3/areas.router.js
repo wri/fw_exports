@@ -10,42 +10,70 @@ const Router = require("koa-router");
 const AreaService = require("../../services/areas.service");
 const FileService = require("../../services/areaFile.service");
 import createShareableLink from "services/s3.service";
+const BucketURLModel = require("../../models/bucketURL.model");
+const { ObjectId } = require("mongoose").Types;
 
 const router = new Router({
   prefix: "/exports/areas"
 });
 
-class AreaRouter {
-  static async export(ctx) {
-    let file = "";
+const exportFunction = async (id, payload, fields, fileType) => {
+  let file = "";
 
-    const fields = ctx.request.body.fields || [];
-
+  try {
     // create file
-    switch (ctx.request.body.fileType) {
+    switch (fileType) {
       case "geojson":
-        file = await FileService.createGeojson(ctx.payload);
+        file = await FileService.createGeojson(payload);
         break;
       case "shp":
-        file = await FileService.createShape(ctx.payload);
+        file = await FileService.createShape(payload);
         break;
       case "fwbundle":
-        file = await FileService.createBundle(ctx.payload);
+        file = await FileService.createBundle(payload);
         break;
       case "csv":
-        file = await FileService.createCsv(ctx.payload, fields);
+        file = await FileService.createCsv(payload, fields);
         break;
       default:
-        ctx.throw(400, "Please enter a valid file type (csv, geojson, fwbundle)");
         break;
     }
 
     // read the zip file and upload to s3 bucket
     const URL = await createShareableLink({
-      extension: `.${ctx.request.body.fileType === "fwbundle" ? "fwbundle" : "zip"}`,
+      extension: `.${fileType === "fwbundle" ? "fwbundle" : "zip"}`,
       body: file
     });
-    ctx.body = { data: URL };
+
+    const newURL = new BucketURLModel({ id: id, URL: URL });
+    newURL.save();
+  } catch (error) {
+    const newURL = new BucketURLModel({ id: id, URL: error });
+    newURL.save();
+  }
+};
+
+class AreaRouter {
+  static async getUrl(ctx) {
+    let id = ctx.request.params.id;
+    let URL = await BucketURLModel.findOne({ id });
+    if (URL) {
+      ctx.body = { data: URL.URL };
+      BucketURLModel.deleteMany({ id: id });
+    } else ctx.body = { data: null };
+    ctx.status = 200;
+  }
+
+  static async export(ctx) {
+    if (!["csv", "fwbundle", "geojson", "shp"].includes(ctx.request.body.fileType))
+      ctx.throw(400, "Please enter a valid file type");
+    const fields = ctx.request.body.fields || [];
+
+    const objId = new ObjectId();
+
+    exportFunction(objId, ctx.payload, fields, ctx.request.body.fileType);
+
+    ctx.body = { data: objId };
     ctx.status = 200;
   }
 }
@@ -79,6 +107,7 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
   await next();
 };
 
+router.get("/:id", isAuthenticatedMiddleware, AreaRouter.getUrl);
 router.post("/exportOne/:areaid", isAuthenticatedMiddleware, getArea, AreaRouter.export);
 router.post("/exportAll", isAuthenticatedMiddleware, getAreas, AreaRouter.export);
 
