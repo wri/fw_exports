@@ -83,3 +83,7 @@ variable "auth_url" {
   type    = string
   default = "https://api.resourcewatch.org"
 }
+variable "geostore_api_url" {
+  type    = string
+  default = "https://api.resourcewatch.org/v1"
+}

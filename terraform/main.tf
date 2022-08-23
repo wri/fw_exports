@@ -80,6 +80,7 @@ data "template_file" "container_definition" {
     AREAS_API_URL           = "https://${data.terraform_remote_state.fw_core.outputs.public_url}/v3/forest-watcher"
     ALERTS_API_URL          = var.alerts_api_url
     auth_url                = var.auth_url
+    geostore_api_url = var.geostore_api_url
     s3_bucket               = var.s3_bucket
     s3_access_key_id        = var.s3_access_key_id
     s3_secret_access_key    = var.s3_secret_access_key

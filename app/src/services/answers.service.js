@@ -10,7 +10,7 @@ class AnswerService {
       const baseURL = config.get("formsAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/v1/reports/${id}`,
+        url: `/v3/reports/${id}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
