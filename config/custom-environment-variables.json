@@ -19,6 +19,9 @@
   "gfwApiKey": {
     "apiKey": "GFW_DATA_API_KEY"
   },
+  "geostoreAPI": {
+    "url": "GEOSTORE_API_URL"
+  },
   "auth": {
     "url": "AUTH_URL"
   },

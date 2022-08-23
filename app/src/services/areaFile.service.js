@@ -4,6 +4,7 @@ const AlertService = require("./alerts.service");
 //const ConvertService = require("./convert.service");
 const { parse } = require("json2csv");
 const shpwrite = require("shp-write");
+const GeostoreService = require("./geostore.service");
 
 class FileService {
   static async createBundle(payload) {
@@ -93,15 +94,26 @@ class FileService {
 
     // loop over records
     for await (const record of payload) {
-      if (record.attributes.geostore.geojson) {
-        let geojson = record.attributes.geostore.geojson;
+      let geojson;
+      // pull down geojson info
+      if(!record.attributes.geostore.geojson) {
+        geojson = await GeostoreService.getGeostore(record.attributes.geostore);
         geojson.attributes = {
           id: record.id,
           name: record.attributes.name,
           createdAt: record.attributes.createdAt,
           image: record.attributes.image
         };
-
+        archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
+      }
+      else if (record.attributes.geostore.geojson) {
+        geojson = record.attributes.geostore.geojson;
+        geojson.attributes = {
+          id: record.id,
+          name: record.attributes.name,
+          createdAt: record.attributes.createdAt,
+          image: record.attributes.image
+        };
         // save each geojson as new file
         archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
       }
