@@ -43,7 +43,7 @@ const exportFunction = async (id, payload, fields, fileType) => {
 
     // read the zip file and upload to s3 bucket
     const URL = await createShareableLink({
-      extension: `.${fileType === "fwbundle" ? "fwbundle" : "zip"}`,
+      extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
       body: file
     });
 
