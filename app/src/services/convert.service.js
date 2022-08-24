@@ -6,7 +6,6 @@ class ConvertService {
     logger.info(`Converting geojson ${geojson}`);
     try {
       const response = await axios.post(`http://ogre.adc4gis.com/convertJson`, JSON.stringify({ json: geojson }));
-      console.log(response.data);
       const shp = response.data;
       logger.info("Got shapefile");
       return shp;

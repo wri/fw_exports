@@ -49,7 +49,7 @@ class FileService {
       for await (const dataset of newRecord.datasets) {
         // get alerts
         const alerts = await AlertService.getAlerts(dataset.slug, newRecord.geostore.id);
-        //console.log(typeof)
+
         bundle.alerts.push(
           ...alerts.map(alert => {
             return {
@@ -96,8 +96,9 @@ class FileService {
     for await (const record of payload) {
       let geojson;
       // pull down geojson info
-      if(!record.attributes.geostore.geojson) {
-        geojson = await GeostoreService.getGeostore(record.attributes.geostore);
+      if (!record.attributes.geostore.geojson) {
+        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        geojson = geojsonResponse.geojson;
         geojson.attributes = {
           id: record.id,
           name: record.attributes.name,
@@ -105,8 +106,7 @@ class FileService {
           image: record.attributes.image
         };
         archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
-      }
-      else if (record.attributes.geostore.geojson) {
+      } else if (record.attributes.geostore.geojson) {
         geojson = record.attributes.geostore.geojson;
         geojson.attributes = {
           id: record.id,
@@ -200,8 +200,22 @@ class FileService {
 
     // loop over records
     for await (const record of payload) {
+      let geojson;
+      if (!record.attributes.geostore.geojson) {
+        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        geojson = geojsonResponse.geojson;
+        geojson.attributes = {
+          id: record.id,
+          name: record.attributes.name,
+          createdAt: record.attributes.createdAt,
+          image: record.attributes.image
+        };
+        let shpfile = shpwrite.zip(geojson);
+        //let shpfile = await ConvertService.geojsonToShp(geojson)
+        archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
+      }
       if (record.attributes.geostore.geojson) {
-        let geojson = record.attributes.geostore.geojson;
+        geojson = record.attributes.geostore.geojson;
         geojson.attributes = {
           id: record.id,
           name: record.attributes.name,
