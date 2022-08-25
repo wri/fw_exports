@@ -87,7 +87,7 @@ const getArea = async (ctx, next) => {
 
 const getAreas = async (ctx, next) => {
   const areas = await AreaService.getAreas();
-  if(!areas) ctx.throw(404, "Something went wrong");
+  if (!areas) ctx.throw(404, "Something went wrong");
   ctx.payload = areas;
   await next();
 };

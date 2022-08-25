@@ -155,10 +155,24 @@ class FileService {
       fields.forEach(field => {
         if (record.attributes[field]) row[field] = record.attributes[field];
       });
-
+      let geojson;
+      if (!record.attributes.geostore.geojson) {
+        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        geojson = geojsonResponse.geojson;
+        if (geojson.features) {
+          geojson.features.forEach((feature, index) => {
+            let featureName = "feature" + index.toString();
+            // turn coordinates into simpler array
+            let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+            let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
+            row[featureName] = wkt;
+            if (!fields.includes(featureName)) fields.push(featureName);
+          });
+        }
+      }
       // format geojson data
-      if (record.attributes.geostore.geojson) {
-        let geojson = record.attributes.geostore.geojson;
+      else if (record.attributes.geostore.geojson) {
+        geojson = record.attributes.geostore.geojson;
         geojson.features.forEach((feature, index) => {
           let featureName = "feature" + index.toString();
           // turn coordinates into simpler array
