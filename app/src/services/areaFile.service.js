@@ -99,21 +99,25 @@ class FileService {
       if (!record.attributes.geostore.geojson) {
         let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
         geojson = geojsonResponse.geojson;
-        geojson.attributes = {
-          id: record.id,
-          name: record.attributes.name,
-          createdAt: record.attributes.createdAt,
-          image: record.attributes.image
-        };
+        geojson.features.forEach(feature => {
+          feature.properties = {
+            id: record.id,
+            name: record.attributes.name,
+            createdAt: record.attributes.createdAt,
+            image: record.attributes.image
+          };
+        });
         archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
       } else if (record.attributes.geostore.geojson) {
         geojson = record.attributes.geostore.geojson;
-        geojson.attributes = {
-          id: record.id,
-          name: record.attributes.name,
-          createdAt: record.attributes.createdAt,
-          image: record.attributes.image
-        };
+        geojson.features.forEach(feature => {
+          feature.properties = {
+            id: record.id,
+            name: record.attributes.name,
+            createdAt: record.attributes.createdAt,
+            image: record.attributes.image
+          };
+        });
         // save each geojson as new file
         archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
       }
@@ -212,37 +216,82 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-    // loop over records
+/*     // loop over records
     for await (const record of payload) {
       let geojson;
       if (!record.attributes.geostore.geojson) {
         let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
         geojson = geojsonResponse.geojson;
-        geojson.attributes = {
-          id: record.id,
-          name: record.attributes.name,
-          createdAt: record.attributes.createdAt,
-          image: record.attributes.image
-        };
+        console.log(geojson)
+        geojson.features.forEach(feature => {
+          feature.properties = {
+            id: `id: ${record.id.toString()}`,
+            name: `name: ${record.attributes.name.toString()}`,
+            createdAt: `createdAt: ${record.attributes.createdAt.toString()}`,
+            image: `image: ${record.attributes.image.toString()}`
+          };
+        });
         let shpfile = shpwrite.zip(geojson);
         //let shpfile = await ConvertService.geojsonToShp(geojson)
         archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
       if (record.attributes.geostore.geojson) {
         geojson = record.attributes.geostore.geojson;
-        geojson.attributes = {
-          id: record.id,
-          name: record.attributes.name,
-          createdAt: record.attributes.createdAt,
-          image: record.attributes.image
-        };
+        console.log(geojson)
+        geojson.features.forEach(feature => {
+          feature.properties = {
+            id: `id: ${record.id.toString()}`,
+            name: `name: ${record.attributes.name.toString()}`,
+            createdAt: `createdAt: ${record.attributes.createdAt.toString()}`,
+            image: `image: ${record.attributes.image.toString()}`
+          };
+        });
 
         let shpfile = shpwrite.zip(geojson);
         //let shpfile = await ConvertService.geojsonToShp(geojson)
         archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
-    }
-
+    } */
+    let shapeArray = {
+      type: 'FeatureCollection',
+      features: []
+    };
+    for await (const record of payload) {
+      let geojson;
+      if (!record.attributes.geostore.geojson) {
+        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        geojson = geojsonResponse.geojson;
+        geojson.features.forEach(feature => {
+          feature.properties = {
+            id: `id: ${record.id.toString()}`,
+            name: `name: ${record.attributes.name.toString()}`,
+            createdAt: `createdAt: ${record.attributes.createdAt.toString()}`,
+            image: `image: ${record.attributes.image.toString()}`
+          };
+        });
+        shapeArray.features.push(...geojson.features)
+        //let shpfile = shpwrite.zip(geojson);
+        //let shpfile = await ConvertService.geojsonToShp(geojson)
+        //archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
+      }
+      if (record.attributes.geostore.geojson) {
+        geojson = record.attributes.geostore.geojson;
+        geojson.features.forEach(feature => {
+          feature.properties = {
+            id: `id: ${record.id.toString()}`,
+            name: `name: ${record.attributes.name.toString()}`,
+            createdAt: `createdAt: ${record.attributes.createdAt.toString()}`,
+            image: `image: ${record.attributes.image.toString()}`
+          };
+        });
+        shapeArray.features.push(...geojson.features)
+        //let shpfile = shpwrite.zip(geojson);
+        //let shpfile = await ConvertService.geojsonToShp(geojson)
+        //archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
+      }
+    } 
+    let shpfile = shpwrite.zip(shapeArray);
+    archive.append(shpfile, { name: `areas.zip` });
     archive.finalize();
 
     return new Promise((resolve, reject) => {
