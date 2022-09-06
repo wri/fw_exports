@@ -45,6 +45,11 @@ class FileService {
       };
       delete newRecord.reportTemplate;
 
+      if(!record.attribues.geostore.geojson) {
+        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        newRecord.geostore = geojsonResponse;
+      }
+
       // get alerts for each area dataset
       for await (const dataset of newRecord.datasets) {
         // get alerts
