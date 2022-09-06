@@ -23,6 +23,12 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
   try {
     // create file
     switch (fileType) {
+      case "geojson":
+        file = await FileService.createGeojson(payload);
+        break;
+      case "shp":
+        file = await FileService.createShape(payload);
+        break;
       case "csv":
         file = await FileService.createCsv(payload, fields, templates, language);
         break;
@@ -64,7 +70,7 @@ class AnswerRouter {
       if (!template.attributes.languages.includes(ctx.request.body.language))
         ctx.throw(400, "Please enter a valid language for all templates");
     });
-    if (!["csv", "fwbundle"].includes(ctx.request.body.fileType)) ctx.throw(400, "Please enter a valid file type");
+    if (!["csv", "fwbundle", "geojson", "shp"].includes(ctx.request.body.fileType)) ctx.throw(400, "Please enter a valid file type");
     exportFunction(
       objId,
       ctx.payload,

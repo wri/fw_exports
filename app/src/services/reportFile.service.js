@@ -2,6 +2,7 @@ const { parse } = require("json2csv");
 const archiver = require("archiver");
 import axios from "axios";
 const streamBuffers = require("stream-buffers");
+const shpwrite = require("shp-write")
 
 class FileService {
   static async createCsv(payload, fields, templates, language) {
@@ -180,6 +181,119 @@ class FileService {
       myWritableStreamBuffer.on("error", reject);
     });
   }
+
+  static async createShape(payload) {
+    var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
+      initialSize: 100 * 1024, // start at 100 kilobytes.
+      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+    });
+
+    const archive = archiver("zip");
+
+    archive.on("error", function (err) {
+      throw err;
+    });
+    archive.pipe(myWritableStreamBuffer);
+
+    let shapeArray = {
+      type: 'FeatureCollection',
+      features: []
+    };
+
+    for await (const record of payload) {
+      let shape = {
+        type: "Feature",
+        properties: {
+          ...record.attributes
+        }
+      };
+      if(record.attributes.clickedPosition && record.attributes.clickedPosition.length>1) {
+        let coordinates = [];
+        record.attributes.clickedPosition.forEach(position => {
+          coordinates.push(position)
+        })
+        shape.geometry = {
+          type: "MultiPoint",
+          coordinates
+        }
+      }
+      else if(record.attributes.clickedPosition && record.attributes.clickedPosition.length===1) {
+        shape.geometry = {
+          type: "Point",
+          coordinates: record.attributes.clickedPosition
+        }
+      }
+      else continue;
+      shapeArray.features.push(shape)
+    } 
+    let shpfile = shpwrite.zip(shapeArray);
+    archive.append(shpfile, { name: `reports.zip` });
+    archive.finalize();
+
+    return new Promise((resolve, reject) => {
+      myWritableStreamBuffer.on("finish", () => {
+        const contents = myWritableStreamBuffer.getContents();
+        resolve(contents);
+      });
+      myWritableStreamBuffer.on("error", reject);
+    });
+  }
+
+  static async createGeojson(payload) {
+    var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
+      initialSize: 100 * 1024, // start at 100 kilobytes.
+      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+    });
+
+    const archive = archiver("zip");
+
+    archive.on("error", function (err) {
+      throw err;
+    });
+    archive.pipe(myWritableStreamBuffer);
+
+    let geojson = {
+      type: 'FeatureCollection',
+      features: []
+    };
+    for await (const record of payload) {
+      let shape = {
+        type: "Feature",
+        properties: {
+          ...record.attributes
+        }
+      };
+      if(record.attributes.clickedPosition && record.attributes.clickedPosition.length>1) {
+        let coordinates = [];
+        record.attributes.clickedPosition.forEach(position => {
+          coordinates.push([position.lat, position.lon])
+        })
+        shape.geometry = {
+          type: "MultiPoint",
+          coordinates
+        }
+      }
+      else {
+        shape.geometry = {
+          type: "Point",
+          coordinates: [record.attributes.clickedPosition.lat, record.attributes.clickedPosition.lon]
+        }
+      }
+      geojson.features.push(shape)
+    } 
+
+    archive.append(JSON.stringify(geojson), { name: `reports.geojson` });
+    archive.finalize();
+
+    return new Promise((resolve, reject) => {
+      myWritableStreamBuffer.on("finish", () => {
+        const contents = myWritableStreamBuffer.getContents();
+        resolve(contents);
+      });
+      myWritableStreamBuffer.on("error", reject);
+    });
+  }
+
 }
 
 module.exports = FileService;

@@ -216,7 +216,7 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-/*     // loop over records
+/*  // loop over records
     for await (const record of payload) {
       let geojson;
       if (!record.attributes.geostore.geojson) {
