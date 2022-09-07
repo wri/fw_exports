@@ -5,15 +5,6 @@ const streamBuffers = require("stream-buffers");
 const shpwrite = require("shp-write");
 const PDFDocument = require('pdfkit')
 
-const titles = {
-  "createdAt": "Created At",
-  "fullName": "Monitor",
-  "reportName": "Report Name",
-  "areaOfInterestName": "Area of Interest Name",
-  "clickedPosition": "Clicked Position",
-  "layer": "Report Type",
-  "userPosition": "User Position"
-};
 
 const allowedFields = [
   "createdAt",
@@ -86,7 +77,13 @@ class FileService {
       fields.splice(fields.indexOf("responses"), 1);
       fields.push(...questions.map(question => question.label[language]));
     }
-    const opts = { fields };
+
+    const columnLabels = fields.map(field => {
+      if(titles[langauge][field]) return titles[language][field]
+      else return field
+    })
+
+    const opts = { fields: columnLabels };
     const csv = parse(payload, opts);
     archive.append(csv, { name: "reportAnswers.csv" });
     archive.finalize();
@@ -359,7 +356,10 @@ class FileService {
 
       filteredFields.forEach((field, i) => {
         doc.image(images[field].data,50+250*(i%2),150+(i-i%2)/2*50, {fit: [20,20]});
-        doc.font('Helvetica').fontSize(12).text(titles[field].toUpperCase(),80+250*(i%2),150+(i-i%2)/2*50);
+        let fieldName = "";
+        if(titles[langauge][field]) fieldName = titles[langauge][field];
+        else fieldName = field;
+        doc.font('Helvetica').fontSize(12).text(fieldName.toUpperCase(),80+250*(i%2),150+(i-i%2)/2*50);
         let textToPrint = "";
         if(Array.isArray(record.attributes[field])) {
           if(typeof record.attributes[field][0] === 'object') textToPrint = JSON.stringify(record.attributes[field])
@@ -422,3 +422,76 @@ class FileService {
 }
 
 module.exports = FileService;
+
+const titles = {
+  en: {
+    "fullName": "Name",
+    "areaOfInterestName": "Area",
+    "createdAt": "Date",
+    "language": "Language",
+    "userPosition": "User Position",
+    "reportedPosition": "Reported Position",
+    "layer": "Alert"
+  },
+
+es:{
+  "fullName": "Nombre",
+  "areaOfInterestName": "Area",
+  "createdAt": "Fecha",
+  "language": "Idioma",
+  "userPosition": "Posición del usuario",
+  "reportedPosition": "Posición del reporte",
+  "layer": "Alerta"
+},
+
+fr:{
+  "fullName": "Nom",
+  "areaOfInterestName": "Zone",
+  "createdAt": "Date",
+  "language": "Langue",
+  "userPosition": "Position de l'utilisateur",
+  "reportedPosition": "Position signalée",
+  "layer": "Alerte"
+},
+
+id:{
+  "fullName": "Nama",
+  "areaOfInterestName": "Area",
+  "createdAt": "Tanggal",
+  "language": "Bahasa",
+  "userPosition": "Posisi Pengguna",
+  "reportedPosition": "Posisi Terlapor",
+  "layer": "Peringatan"
+},
+
+mg:{
+  "fullName": "Nama",
+  "areaOfInterestName": "Area",
+  "createdAt": "Tanggal",
+  "language": "Bahasa",
+  "userPosition": "Posisi Pengguna",
+  "reportedPosition": "Posisi Terlapor",
+  "layer": "Peringatan"
+},
+
+nl:{
+  "fullName": "Naam",
+  "areaOfInterestName": "gebied",
+  "createdAt": "Datum",
+  "language": "Taal",
+  "userPosition": "Gebruikers locatie",
+  "reportedPosition": "Gerapporteerde locatie",
+  "layer": "Waarschuwing"
+},
+
+pt:{
+  "fullName": "Nome",
+  "areaOfInterestName": "Área",
+  "createdAt": "Data",
+  "language": "Língua",
+  "userPosition": "Posição do usuário",
+  "reportedPosition": "Localização reportada",
+  "layer": "Alerta"
+}
+
+}
