@@ -2,7 +2,28 @@ const { parse } = require("json2csv");
 const archiver = require("archiver");
 import axios from "axios";
 const streamBuffers = require("stream-buffers");
-const shpwrite = require("shp-write")
+const shpwrite = require("shp-write");
+const PDFDocument = require('pdfkit')
+
+const titles = {
+  "createdAt": "Created At",
+  "fullName": "Monitor",
+  "reportName": "Report Name",
+  "areaOfInterestName": "Area of Interest Name",
+  "clickedPosition": "Clicked Position",
+  "layer": "Report Type",
+  "userPosition": "User Position"
+};
+
+const allowedFields = [
+  "createdAt",
+  "fullName",
+  "reportName",
+  "areaOfInterestName",
+  "clickedPosition",
+  "layer",
+  "userPosition"
+];
 
 class FileService {
   static async createCsv(payload, fields, templates, language) {
@@ -283,6 +304,110 @@ class FileService {
     } 
 
     archive.append(JSON.stringify(geojson), { name: `reports.geojson` });
+    archive.finalize();
+
+    return new Promise((resolve, reject) => {
+      myWritableStreamBuffer.on("finish", () => {
+        const contents = myWritableStreamBuffer.getContents();
+        resolve(contents);
+      });
+      myWritableStreamBuffer.on("error", reject);
+    });
+  }
+
+  static async createPDF(payload, templates, fields, language) {
+    var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
+      initialSize: 100 * 1024, // start at 100 kilobytes.
+      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+    });
+
+    const archive = archiver("zip");
+
+    archive.on("error", function (err) {
+      throw err;
+    });
+    archive.pipe(myWritableStreamBuffer);
+    let images = {}
+    images.fullName = await axios.get('https://cdn-icons-png.flaticon.com/512/1077/1077114.png', {responseType: 'arraybuffer'});
+    images.areaOfInterestName = await axios.get('https://cdn-icons-png.flaticon.com/512/592/592245.png', {responseType: 'arraybuffer'});
+    images.createdAt = await axios.get('https://cdn-icons-png.flaticon.com/512/747/747310.png', {responseType: 'arraybuffer'});
+    images.layer = await axios.get('https://cdn-icons-png.flaticon.com/512/126/126307.png', {responseType: 'arraybuffer'});
+    images.clickedPosition = await axios.get('https://cdn-icons-png.flaticon.com/512/70/70699.png', {responseType: 'arraybuffer'});
+    images.userPosition = images.clickedPosition;
+
+    // create array of questions. There will be lots of questions depending on the number of templates.
+    let questions = [];
+    templates.forEach(template => {
+      questions.push(...template.attributes.questions);
+    });
+
+    // sanitise fields
+    const filteredFields = fields.filter(value => allowedFields.includes(value))
+
+    for await (const record of payload) {
+      
+      var docStreamBuffer = new streamBuffers.WritableStreamBuffer({
+        initialSize: 100 * 1024, // start at 100 kilobytes.
+        incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      });
+
+      const doc = new PDFDocument({size: 'A4'});
+      doc.pipe(docStreamBuffer);
+
+      doc.fontSize(15).text('Monitoring Report', 50, 80);
+      doc.font('Helvetica-Bold').fontSize(18).text(record.attributes.reportName.toUpperCase(), 50, 105);
+
+      filteredFields.forEach((field, i) => {
+        doc.image(images[field].data,50+250*(i%2),150+(i-i%2)/2*50, {fit: [20,20]});
+        doc.font('Helvetica').fontSize(12).text(titles[field].toUpperCase(),80+250*(i%2),150+(i-i%2)/2*50);
+        let textToPrint = "";
+        if(Array.isArray(record.attributes[field])) {
+          if(typeof record.attributes[field][0] === 'object') textToPrint = JSON.stringify(record.attributes[field])
+          else textToPrint = record.attributes[field].toString();
+        } else textToPrint = record.attributes[field]
+        doc.fontSize(15).text(textToPrint,80+250*(i%2),170+(i-i%2)/2*50)
+      })
+
+      const lineY = 50+50*(filteredFields.length+(filteredFields.length%2)/2)
+
+      doc
+      .moveTo(50,lineY)
+      .lineTo(500,lineY)
+      .stroke();
+
+    
+        // loop over responses
+        record.attributes.responses.forEach((response,i) => {
+          let responseToShow = "";
+          // find the question in questions, if not found, add
+          let question = questions.find(question => question.name === response.name);
+          if (!question) {
+            question = { name: response.name, label: { [language]: response.name } };
+            questions.push(question);
+          }
+          // check if the answer is an image
+          if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
+            responseToShow = `Picture found at: ${response.value}`
+          } else responseToShow = response.value;
+
+          doc.font('Helvetica-Bold').fontSize(12).text(question.label[language],50,lineY+15+50*i);
+          doc.font('Helvetica').fontSize(12).text(responseToShow, 50, lineY+30+50*i)
+
+        });
+    
+
+      doc.end();
+
+      await new Promise((resolve) => {
+        docStreamBuffer.on("finish", () => {
+          const docContents = docStreamBuffer.getContents();
+          archive.append(docContents, {name: `${record.id.toString()}.pdf`})
+          resolve();
+        })
+      })
+    } 
+    
+    //archive.append(shpfile, { name: `reports.zip` });
     archive.finalize();
 
     return new Promise((resolve, reject) => {
