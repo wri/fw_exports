@@ -11,9 +11,9 @@ const allowedFields = [
   "fullName",
   "reportName",
   "areaOfInterestName",
-  "clickedPosition",
   "layer",
-  "userPosition"
+  "userPosition",
+  "clickedPosition"
 ];
 
 class FileService {
@@ -79,7 +79,7 @@ class FileService {
     }
 
     const columnLabels = fields.map(field => {
-      if(titles[langauge][field]) return titles[language][field]
+      if(titles[language][field]) return titles[language][field]
       else return field
     })
 
@@ -339,7 +339,7 @@ class FileService {
     });
 
     // sanitise fields
-    const filteredFields = fields.filter(value => allowedFields.includes(value))
+    const filteredFields = allowedFields.filter(value => fields.includes(value))
 
     for await (const record of payload) {
       
@@ -352,12 +352,12 @@ class FileService {
       doc.pipe(docStreamBuffer);
 
       doc.fontSize(15).text('Monitoring Report', 50, 80);
-      doc.font('Helvetica-Bold').fontSize(18).text(record.attributes.reportName.toUpperCase(), 50, 105);
+      doc.font('Helvetica-Bold').fontSize(15).text(record.attributes.reportName.toUpperCase(), 50, 105);
 
       filteredFields.forEach((field, i) => {
         doc.image(images[field].data,50+250*(i%2),150+(i-i%2)/2*50, {fit: [20,20]});
         let fieldName = "";
-        if(titles[langauge][field]) fieldName = titles[langauge][field];
+        if(titles[language][field]) fieldName = titles[language][field];
         else fieldName = field;
         doc.font('Helvetica').fontSize(12).text(fieldName.toUpperCase(),80+250*(i%2),150+(i-i%2)/2*50);
         let textToPrint = "";
