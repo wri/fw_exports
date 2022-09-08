@@ -36,6 +36,8 @@ class FileService {
       throw err;
     });
     archive.pipe(myWritableStreamBuffer);
+    try {
+      
 
     // loop over records
     for await (const record of payload) {
@@ -45,7 +47,7 @@ class FileService {
       };
       delete newRecord.reportTemplate;
 
-      if(!record.attribues.geostore.geojson) {
+      if(!record.attributes.geostore.geojson) {
         let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
         newRecord.geostore = geojsonResponse;
       }
@@ -54,7 +56,6 @@ class FileService {
       for await (const dataset of newRecord.datasets) {
         // get alerts
         const alerts = await AlertService.getAlerts(dataset.slug, newRecord.geostore.id);
-
         bundle.alerts.push(
           ...alerts.map(alert => {
             return {
@@ -68,9 +69,13 @@ class FileService {
           })
         );
       }
-
+      
       bundle.areas.push(newRecord);
     }
+  } catch (error) {
+      console.log(error)
+      throw error
+  }
 
     archive.append(JSON.stringify(bundle), { name: "bundle.json" });
     archive.finalize();
