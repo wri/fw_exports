@@ -9,7 +9,6 @@ const PDFDocument = require('pdfkit')
 const allowedFields = [
   "createdAt",
   "fullName",
-  "reportName",
   "areaOfInterestName",
   "layer",
   "userPosition",
