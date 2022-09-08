@@ -88,7 +88,16 @@ const getArea = async (ctx, next) => {
 const getAreas = async (ctx, next) => {
   const areas = await AreaService.getAreas();
   if (!areas) ctx.throw(404, "Something went wrong");
-  ctx.payload = areas;
+
+  // go through areas and remove duplicates
+  let uniqueAreas = [];
+  areas.forEach(area => {
+    // find that area in unique area array
+    let existingArea = uniqueAreas.find(uniqueArea => uniqueArea.id.toString() === area.id.toString())
+    if(!existingArea) uniqueAreas.push(area);
+  })
+
+  ctx.payload = uniqueAreas;
   await next();
 };
 
