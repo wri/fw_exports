@@ -227,39 +227,37 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-    let shapeArray = {
-      type: 'FeatureCollection',
-      features: []
-    };
-
+    // loop over records
     for await (const record of payload) {
-      let shape = {
-        type: "Feature",
-        properties: {
-          ...record.attributes
-        }
-      };
-      if(record.attributes.clickedPosition && record.attributes.clickedPosition.length>1) {
-        let coordinates = [];
-        record.attributes.clickedPosition.forEach(position => {
-          coordinates.push(position)
-        })
-        shape.geometry = {
-          type: "MultiPoint",
-          coordinates
-        }
+      let geojson;
+      if (!record.attributes.geostore.geojson) {
+        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        geojson = geojsonResponse.geojson;
+        geojson.attributes = {
+          id: record.id,
+          name: record.attributes.name,
+          createdAt: record.attributes.createdAt,
+          image: record.attributes.image
+        };
+        let shpfile = shpwrite.zip(geojson);
+        //let shpfile = await ConvertService.geojsonToShp(geojson)
+        archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
-      else if(record.attributes.clickedPosition && record.attributes.clickedPosition.length===1) {
-        shape.geometry = {
-          type: "Point",
-          coordinates: record.attributes.clickedPosition
-        }
+      if (record.attributes.geostore.geojson) {
+        geojson = record.attributes.geostore.geojson;
+        geojson.attributes = {
+          id: record.id,
+          name: record.attributes.name,
+          createdAt: record.attributes.createdAt,
+          image: record.attributes.image
+        };
+
+        let shpfile = shpwrite.zip(geojson);
+        //let shpfile = await ConvertService.geojsonToShp(geojson)
+        archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
-      else continue;
-      shapeArray.features.push(shape)
-    } 
-    let shpfile = shpwrite.zip(shapeArray);
-    archive.append(shpfile, { name: `reports.zip` });
+    }
+
     archive.finalize();
 
     return new Promise((resolve, reject) => {
