@@ -78,7 +78,7 @@ class FileService {
     }
 
     const columnLabels = fields.map(field => {
-      if(titles[language][field]) return titles[language][field]
+      if(titles[language][field]) return {label: titles[language][field], value: field}
       else return field
     })
 
