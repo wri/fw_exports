@@ -89,7 +89,7 @@ class FileService {
     });
   }
 
-  static async createGeojson(payload) {
+  static async createGeojson(payload, fields = []) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -102,6 +102,11 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
+    let geojsonFile = {
+      type: 'FeatureCollection',
+      features: []
+    };
+
     // loop over records
     for await (const record of payload) {
       let geojson;
@@ -112,10 +117,9 @@ class FileService {
         geojson.features.forEach(feature => {
           feature.properties = {
             id: record.id,
-            name: record.attributes.name,
-            createdAt: record.attributes.createdAt,
-            image: record.attributes.image
           };
+          fields.forEach(field => feature.properties[field] = record.attributes[field])
+          geojsonFile.features.push(feature)
         });
         archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
       } else if (record.attributes.geostore.geojson) {
@@ -123,16 +127,13 @@ class FileService {
         geojson.features.forEach(feature => {
           feature.properties = {
             id: record.id,
-            name: record.attributes.name,
-            createdAt: record.attributes.createdAt,
-            image: record.attributes.image
           };
+          fields.forEach(field => feature.properties[field] = record.attributes[field])
+          geojsonFile.features.push(feature)
         });
-        // save each geojson as new file
-        archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
       }
     }
-
+    archive.append(JSON.stringify(geojsonFile), { name: `areas.geojson` });
     archive.finalize();
 
     return new Promise((resolve, reject) => {
