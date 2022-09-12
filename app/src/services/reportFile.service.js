@@ -41,7 +41,22 @@ class FileService {
     // flatten object
     for await (const record of payload) {
       for (const property in record.attributes) {
-        record[property] = record.attributes[property];
+        let textToPrint = "";
+        if(Array.isArray(record.attributes[property])) { // if it's coordinates
+          if(typeof record.attributes[property][0] === 'object') { // if it's an array of objects ({lon: number, lat: number})
+            textToPrint = "MULTIPOINT (";
+            record.attributes[property].forEach(point => {
+              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `
+            })
+            textToPrint.slice(0,-1);
+            textToPring.slice(0,-1);
+            textToPrint = textToPrint + ")"
+          }
+          else { // if it's an array of coordinates
+            textToPrint = `POINT (${record.attributes[property][0]} ${record.attributes[property][1]})`;
+          } 
+        } else textToPrint = record.attributes[property]
+        record[property] = textToPrint;
       }
 
       if (fields.includes("responses")) {
@@ -360,9 +375,19 @@ class FileService {
         else fieldName = field;
         doc.font('Helvetica').fontSize(12).text(fieldName.toUpperCase(),80+250*(i%2),150+(i-i%2)/2*50);
         let textToPrint = "";
-        if(Array.isArray(record.attributes[field])) {
-          if(typeof record.attributes[field][0] === 'object') textToPrint = JSON.stringify(record.attributes[field])
-          else textToPrint = record.attributes[field].toString();
+        if(Array.isArray(record.attributes[field])) { // if it's coordinates
+          if(typeof record.attributes[field][0] === 'object') { // if it's an array of objects ({lon: number, lat: number})
+            textToPrint = "MULTIPOINT (";
+            record.attributes[field].forEach(point => {
+              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `
+            })
+            textToPrint.slice(0,-1);
+            textToPring.slice(0,-1);
+            textToPrint = textToPrint + ")"
+          }
+          else { // if it's an array of coordinates
+            textToPrint = `POINT (${record.attributes[field][0]} ${record.attributes[field][1]})`;
+          } 
         } else textToPrint = record.attributes[field]
         doc.fontSize(15).text(textToPrint,80+250*(i%2),170+(i-i%2)/2*50)
       })
