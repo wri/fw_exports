@@ -3,17 +3,10 @@ const archiver = require("archiver");
 import axios from "axios";
 const streamBuffers = require("stream-buffers");
 const shpwrite = require("shp-write");
-const PDFDocument = require('pdfkit')
+const PDFDocument = require("pdfkit");
+const GeostoreService = require("./geostore.service");
 
-
-const allowedFields = [
-  "createdAt",
-  "fullName",
-  "areaOfInterestName",
-  "layer",
-  "userPosition",
-  "clickedPosition"
-];
+const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition", "clickedPosition"];
 
 class FileService {
   static async createCsv(payload, fields, templates, language) {
@@ -42,20 +35,22 @@ class FileService {
     for await (const record of payload) {
       for (const property in record.attributes) {
         let textToPrint = "";
-        if(Array.isArray(record.attributes[property])) { // if it's coordinates
-          if(typeof record.attributes[property][0] === 'object') { // if it's an array of objects ({lon: number, lat: number})
+        if (Array.isArray(record.attributes[property])) {
+          // if it's coordinates
+          if (typeof record.attributes[property][0] === "object") {
+            // if it's an array of objects ({lon: number, lat: number})
             textToPrint = "MULTIPOINT (";
             record.attributes[property].forEach(point => {
-              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `
-            })
-            textToPrint.slice(0,-1);
-            textToPrint.slice(0,-1);
-            textToPrint = textToPrint + ")"
-          }
-          else { // if it's an array of coordinates
+              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+            });
+            textToPrint.slice(0, -1);
+            textToPrint.slice(0, -1);
+            textToPrint = textToPrint + ")";
+          } else {
+            // if it's an array of coordinates
             textToPrint = `POINT (${record.attributes[property][0]} ${record.attributes[property][1]})`;
-          } 
-        } else textToPrint = record.attributes[property]
+          }
+        } else textToPrint = record.attributes[property];
         record[property] = textToPrint;
       }
 
@@ -93,9 +88,9 @@ class FileService {
     }
 
     const columnLabels = fields.map(field => {
-      if(titles[language][field]) return {label: titles[language][field], value: field}
-      else return field
-    })
+      if (titles[language][field]) return { label: titles[language][field], value: field };
+      else return field;
+    });
 
     const opts = { fields: columnLabels };
     const csv = parse(payload, opts);
@@ -283,7 +278,7 @@ class FileService {
     archive.pipe(myWritableStreamBuffer);
 
     let geojson = {
-      type: 'FeatureCollection',
+      type: "FeatureCollection",
       features: []
     };
     for await (const record of payload) {
@@ -293,24 +288,23 @@ class FileService {
           ...record.attributes
         }
       };
-      if(record.attributes.clickedPosition && record.attributes.clickedPosition.length>1) {
+      if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
-          coordinates.push([position.lat, position.lon])
-        })
+          coordinates.push([position.lat, position.lon]);
+        });
         shape.geometry = {
           type: "MultiPoint",
           coordinates
-        }
-      }
-      else {
+        };
+      } else {
         shape.geometry = {
           type: "Point",
           coordinates: [record.attributes.clickedPosition.lat, record.attributes.clickedPosition.lon]
-        }
+        };
       }
-      geojson.features.push(shape)
-    } 
+      geojson.features.push(shape);
+    }
 
     archive.append(JSON.stringify(geojson), { name: `reports.geojson` });
     archive.finalize();
@@ -336,12 +330,22 @@ class FileService {
       throw err;
     });
     archive.pipe(myWritableStreamBuffer);
-    let images = {}
-    images.fullName = await axios.get('https://cdn-icons-png.flaticon.com/512/1077/1077114.png', {responseType: 'arraybuffer'});
-    images.areaOfInterestName = await axios.get('https://cdn-icons-png.flaticon.com/512/592/592245.png', {responseType: 'arraybuffer'});
-    images.createdAt = await axios.get('https://cdn-icons-png.flaticon.com/512/747/747310.png', {responseType: 'arraybuffer'});
-    images.layer = await axios.get('https://cdn-icons-png.flaticon.com/512/126/126307.png', {responseType: 'arraybuffer'});
-    images.clickedPosition = await axios.get('https://cdn-icons-png.flaticon.com/512/70/70699.png', {responseType: 'arraybuffer'});
+    let images = {};
+    images.fullName = await axios.get("https://cdn-icons-png.flaticon.com/512/1077/1077114.png", {
+      responseType: "arraybuffer"
+    });
+    images.areaOfInterestName = await axios.get("https://cdn-icons-png.flaticon.com/512/592/592245.png", {
+      responseType: "arraybuffer"
+    });
+    images.createdAt = await axios.get("https://cdn-icons-png.flaticon.com/512/747/747310.png", {
+      responseType: "arraybuffer"
+    });
+    images.layer = await axios.get("https://cdn-icons-png.flaticon.com/512/126/126307.png", {
+      responseType: "arraybuffer"
+    });
+    images.clickedPosition = await axios.get("https://cdn-icons-png.flaticon.com/512/70/70699.png", {
+      responseType: "arraybuffer"
+    });
     images.userPosition = images.clickedPosition;
 
     // create array of questions. There will be lots of questions depending on the number of templates.
@@ -351,84 +355,91 @@ class FileService {
     });
 
     // sanitise fields
-    const filteredFields = allowedFields.filter(value => fields.includes(value))
+    const filteredFields = allowedFields.filter(value => fields.includes(value));
+
+    console.log(filteredFields);
+    console.log(payload);
 
     for await (const record of payload) {
-      
       var docStreamBuffer = new streamBuffers.WritableStreamBuffer({
         initialSize: 100 * 1024, // start at 100 kilobytes.
         incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
       });
 
-      const doc = new PDFDocument({size: 'A4'});
+      const doc = new PDFDocument({ size: "A4" });
       doc.pipe(docStreamBuffer);
 
-      doc.fontSize(15).text('Monitoring Report', 50, 80);
-      doc.font('Helvetica-Bold').fontSize(15).text(record.attributes.reportName.toUpperCase(), 50, 105);
+      doc.fontSize(15).text("Monitoring Report", 50, 80);
+      doc.font("Helvetica-Bold").fontSize(15).text(record.attributes.reportName.toUpperCase(), 50, 105);
 
       filteredFields.forEach((field, i) => {
-        doc.image(images[field].data,50+250*(i%2),150+(i-i%2)/2*50, {fit: [20,20]});
+        doc.image(images[field].data, 50 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50, { fit: [20, 20] });
         let fieldName = "";
-        if(titles[language][field]) fieldName = titles[language][field];
+        if (titles[language][field]) fieldName = titles[language][field];
         else fieldName = field;
-        doc.font('Helvetica').fontSize(12).text(fieldName.toUpperCase(),80+250*(i%2),150+(i-i%2)/2*50);
+        doc
+          .font("Helvetica")
+          .fontSize(12)
+          .text(fieldName.toUpperCase(), 80 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50);
         let textToPrint = "";
-        if(Array.isArray(record.attributes[field])) { // if it's coordinates
-          if(typeof record.attributes[field][0] === 'object') { // if it's an array of objects ({lon: number, lat: number})
+        if (Array.isArray(record.attributes[field])) {
+          // if it's coordinates
+          if (typeof record.attributes[field][0] === "object") {
+            // if it's an array of objects ({lon: number, lat: number})
             textToPrint = "MULTIPOINT (";
             record.attributes[field].forEach(point => {
-              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `
-            })
-            textToPrint.slice(0,-1);
-            textToPrint.slice(0,-1);
-            textToPrint = textToPrint + ")"
-          }
-          else { // if it's an array of coordinates
+              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+            });
+            textToPrint.slice(0, -1);
+            textToPrint.slice(0, -1);
+            textToPrint = textToPrint + ")";
+          } else {
+            // if it's an array of coordinates
             textToPrint = `POINT (${record.attributes[field][0]} ${record.attributes[field][1]})`;
-          } 
-        } else textToPrint = record.attributes[field]
-        doc.fontSize(15).text(textToPrint,80+250*(i%2),170+(i-i%2)/2*50)
-      })
-
-      const lineY = 50+50*(filteredFields.length+(filteredFields.length%2)/2)
-
-      doc
-      .moveTo(50,lineY)
-      .lineTo(500,lineY)
-      .stroke();
-
-    
-        // loop over responses
-        record.attributes.responses.forEach((response,i) => {
-          let responseToShow = "";
-          // find the question in questions, if not found, add
-          let question = questions.find(question => question.name === response.name);
-          if (!question) {
-            question = { name: response.name, label: { [language]: response.name } };
-            questions.push(question);
           }
-          // check if the answer is an image
-          if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-            responseToShow = `Picture found at: ${response.value}`
-          } else responseToShow = response.value;
+        } else textToPrint = record.attributes[field];
+        doc.fontSize(15).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
+      });
 
-          doc.font('Helvetica-Bold').fontSize(12).text(question.label[language],50,lineY+15+50*i);
-          doc.font('Helvetica').fontSize(12).text(responseToShow, 50, lineY+30+50*i)
+      const lineY = 50 + 50 * (filteredFields.length + (filteredFields.length % 2) / 2);
 
-        });
-    
+      doc.moveTo(50, lineY).lineTo(500, lineY).stroke();
+
+      // loop over responses
+      record.attributes.responses.forEach((response, i) => {
+        let responseToShow = "";
+        // find the question in questions, if not found, add
+        let question = questions.find(question => question.name === response.name);
+        if (!question) {
+          question = { name: response.name, label: { [language]: response.name } };
+          questions.push(question);
+        }
+        // check if the answer is an image
+        if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
+          responseToShow = `Picture found at: ${response.value}`;
+        } else responseToShow = response.value;
+
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(12)
+          .text(question.label[language], 50, lineY + 15 + 50 * i);
+        doc
+          .font("Helvetica")
+          .fontSize(12)
+          .text(responseToShow, 50, lineY + 30 + 50 * i);
+      });
 
       doc.end();
 
-      await new Promise((resolve) => {
+      await new Promise(resolve => {
         docStreamBuffer.on("finish", () => {
           const docContents = docStreamBuffer.getContents();
-          archive.append(docContents, {name: `${record.id.toString()}.pdf`})
+          archive.append(docContents, { name: `${record.id.toString()}.pdf` });
           resolve();
-        })
-      })
-    } 
-    
+        });
+      });
+    }
+
     //archive.append(shpfile, { name: `reports.zip` });
     archive.finalize();
 
@@ -440,80 +451,78 @@ class FileService {
       myWritableStreamBuffer.on("error", reject);
     });
   }
-
 }
 
 module.exports = FileService;
 
 const titles = {
   en: {
-    "fullName": "Name",
-    "areaOfInterestName": "Area",
-    "createdAt": "Date",
-    "language": "Language",
-    "userPosition": "User Position",
-    "reportedPosition": "Reported Position",
-    "layer": "Alert"
+    fullName: "Name",
+    areaOfInterestName: "Area",
+    createdAt: "Date",
+    language: "Language",
+    userPosition: "User Position",
+    reportedPosition: "Reported Position",
+    layer: "Alert"
   },
 
-es:{
-  "fullName": "Nombre",
-  "areaOfInterestName": "Area",
-  "createdAt": "Fecha",
-  "language": "Idioma",
-  "userPosition": "Posición del usuario",
-  "reportedPosition": "Posición del reporte",
-  "layer": "Alerta"
-},
+  es: {
+    fullName: "Nombre",
+    areaOfInterestName: "Area",
+    createdAt: "Fecha",
+    language: "Idioma",
+    userPosition: "Posición del usuario",
+    reportedPosition: "Posición del reporte",
+    layer: "Alerta"
+  },
 
-fr:{
-  "fullName": "Nom",
-  "areaOfInterestName": "Zone",
-  "createdAt": "Date",
-  "language": "Langue",
-  "userPosition": "Position de l'utilisateur",
-  "reportedPosition": "Position signalée",
-  "layer": "Alerte"
-},
+  fr: {
+    fullName: "Nom",
+    areaOfInterestName: "Zone",
+    createdAt: "Date",
+    language: "Langue",
+    userPosition: "Position de l'utilisateur",
+    reportedPosition: "Position signalée",
+    layer: "Alerte"
+  },
 
-id:{
-  "fullName": "Nama",
-  "areaOfInterestName": "Area",
-  "createdAt": "Tanggal",
-  "language": "Bahasa",
-  "userPosition": "Posisi Pengguna",
-  "reportedPosition": "Posisi Terlapor",
-  "layer": "Peringatan"
-},
+  id: {
+    fullName: "Nama",
+    areaOfInterestName: "Area",
+    createdAt: "Tanggal",
+    language: "Bahasa",
+    userPosition: "Posisi Pengguna",
+    reportedPosition: "Posisi Terlapor",
+    layer: "Peringatan"
+  },
 
-mg:{
-  "fullName": "Nama",
-  "areaOfInterestName": "Area",
-  "createdAt": "Tanggal",
-  "language": "Bahasa",
-  "userPosition": "Posisi Pengguna",
-  "reportedPosition": "Posisi Terlapor",
-  "layer": "Peringatan"
-},
+  mg: {
+    fullName: "Nama",
+    areaOfInterestName: "Area",
+    createdAt: "Tanggal",
+    language: "Bahasa",
+    userPosition: "Posisi Pengguna",
+    reportedPosition: "Posisi Terlapor",
+    layer: "Peringatan"
+  },
 
-nl:{
-  "fullName": "Naam",
-  "areaOfInterestName": "gebied",
-  "createdAt": "Datum",
-  "language": "Taal",
-  "userPosition": "Gebruikers locatie",
-  "reportedPosition": "Gerapporteerde locatie",
-  "layer": "Waarschuwing"
-},
+  nl: {
+    fullName: "Naam",
+    areaOfInterestName: "gebied",
+    createdAt: "Datum",
+    language: "Taal",
+    userPosition: "Gebruikers locatie",
+    reportedPosition: "Gerapporteerde locatie",
+    layer: "Waarschuwing"
+  },
 
-pt:{
-  "fullName": "Nome",
-  "areaOfInterestName": "Área",
-  "createdAt": "Data",
-  "language": "Língua",
-  "userPosition": "Posição do usuário",
-  "reportedPosition": "Localização reportada",
-  "layer": "Alerta"
-}
-
-}
+  pt: {
+    fullName: "Nome",
+    areaOfInterestName: "Área",
+    createdAt: "Data",
+    language: "Língua",
+    userPosition: "Posição do usuário",
+    reportedPosition: "Localização reportada",
+    layer: "Alerta"
+  }
+};

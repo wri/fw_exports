@@ -12,12 +12,13 @@ const FileService = require("../../services/reportFile.service");
 import createShareableLink from "services/s3.service";
 const BucketURLModel = require("../../models/bucketURL.model");
 const { ObjectId } = require("mongoose").Types;
+const SparkpostService = require("../../services/sparkpost.service");
 
 const router = new Router({
   prefix: "/exports/reports"
 });
 
-const exportFunction = async (id, payload, fields, templates, language, fileType) => {
+const exportFunction = async (id, payload, fields, templates, language, fileType, email) => {
   let file = "";
 
   try {
@@ -35,9 +36,9 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
       case "fwbundle":
         file = await FileService.createBundle(payload, templates);
         break;
-        case "pdf":
-          file = await FileService.createPDF(payload, templates, fields, language);
-          break;
+      case "pdf":
+        file = await FileService.createPDF(payload, templates, fields, language);
+        break;
       default:
         break;
     }
@@ -47,6 +48,8 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
       extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
       body: file
     });
+
+    if (email) SparkpostService.sendMail(email, URL);
 
     const newURL = new BucketURLModel({ id: id, URL: URL });
     newURL.save();
@@ -73,14 +76,17 @@ class AnswerRouter {
       if (!template.attributes.languages.includes(ctx.request.body.language))
         ctx.throw(400, "Please enter a valid language for all templates");
     });
-    if (!["csv", "fwbundle", "geojson", "shp", "pdf"].includes(ctx.request.body.fileType)) ctx.throw(400, "Please enter a valid file type");
+    if (!["csv", "fwbundle", "geojson", "shp", "pdf"].includes(ctx.request.body.fileType))
+      ctx.throw(400, "Please enter a valid file type");
+
     exportFunction(
       objId,
       ctx.payload,
       ctx.request.body.fields,
       ctx.templates,
       ctx.request.body.language,
-      ctx.request.body.fileType
+      ctx.request.body.fileType,
+      ctx.request.body.email
     );
 
     ctx.body = { data: objId };

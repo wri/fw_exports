@@ -21,6 +21,7 @@ services:
       MONGODB_PORT: 27017
       DB_SECRET: '{ "username": "admin", "password": "password" }'
       DB_DATABASE: fw_exports_db
+      SPARKPOST_API_KEY: ${sparkpost_api_key}
     depends_on:
       - mongo
     volumes:
@@ -50,7 +51,7 @@ services:
       - mongo
 
   mongo:
-    image: mongo:3.4
+    image: mongo:3.6
     container_name: fw-exports-mongo-develop
     ports:
       - "27026:27017"

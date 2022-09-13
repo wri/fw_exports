@@ -19,6 +19,9 @@
   "gfwApiKey": {
     "apiKey": "GFW_DATA_API_KEY"
   },
+  "sparkpost": {
+    "apiKey": "SPARKPOST_API_KEY"
+  },
   "geostoreAPI": {
     "url": "GEOSTORE_API_URL"
   },

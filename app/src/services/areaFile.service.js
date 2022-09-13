@@ -37,45 +37,43 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
     try {
-      
+      // loop over records
+      for await (const record of payload) {
+        const newRecord = {
+          ...record.attributes,
+          id: record.id
+        };
+        delete newRecord.reportTemplate;
 
-    // loop over records
-    for await (const record of payload) {
-      const newRecord = {
-        ...record.attributes,
-        id: record.id
-      };
-      delete newRecord.reportTemplate;
+        if (!record.attributes.geostore.geojson) {
+          let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+          newRecord.geostore = geojsonResponse;
+        }
 
-      if(!record.attributes.geostore.geojson) {
-        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
-        newRecord.geostore = geojsonResponse;
+        // get alerts for each area dataset
+        for await (const dataset of newRecord.datasets) {
+          // get alerts
+          const alerts = await AlertService.getAlerts(dataset.slug, newRecord.geostore.id);
+          bundle.alerts.push(
+            ...alerts.map(alert => {
+              return {
+                areaId: newRecord.id,
+                slug: dataset.slug,
+                long: alert.longitude,
+                lat: alert.latitude,
+                date: alert.date,
+                confidence: alert.confidence
+              };
+            })
+          );
+        }
+
+        bundle.areas.push(newRecord);
       }
-
-      // get alerts for each area dataset
-      for await (const dataset of newRecord.datasets) {
-        // get alerts
-        const alerts = await AlertService.getAlerts(dataset.slug, newRecord.geostore.id);
-        bundle.alerts.push(
-          ...alerts.map(alert => {
-            return {
-              areaId: newRecord.id,
-              slug: dataset.slug,
-              long: alert.longitude,
-              lat: alert.latitude,
-              date: alert.date,
-              confidence: alert.confidence
-            };
-          })
-        );
-      }
-      
-      bundle.areas.push(newRecord);
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
-  } catch (error) {
-      console.log(error)
-      throw error
-  }
 
     archive.append(JSON.stringify(bundle), { name: "bundle.json" });
     archive.finalize();
@@ -103,7 +101,7 @@ class FileService {
     archive.pipe(myWritableStreamBuffer);
 
     let geojsonFile = {
-      type: 'FeatureCollection',
+      type: "FeatureCollection",
       features: []
     };
 
@@ -116,20 +114,19 @@ class FileService {
         geojson = geojsonResponse.geojson;
         geojson.features.forEach(feature => {
           feature.properties = {
-            id: record.id,
+            id: record.id
           };
-          fields.forEach(field => feature.properties[field] = record.attributes[field])
-          geojsonFile.features.push(feature)
+          fields.forEach(field => (feature.properties[field] = record.attributes[field]));
+          geojsonFile.features.push(feature);
         });
-        archive.append(JSON.stringify(geojson), { name: `${record.attributes.name}${record.id}.geojson` });
       } else if (record.attributes.geostore.geojson) {
         geojson = record.attributes.geostore.geojson;
         geojson.features.forEach(feature => {
           feature.properties = {
-            id: record.id,
+            id: record.id
           };
-          fields.forEach(field => feature.properties[field] = record.attributes[field])
-          geojsonFile.features.push(feature)
+          fields.forEach(field => (feature.properties[field] = record.attributes[field]));
+          geojsonFile.features.push(feature);
         });
       }
     }
@@ -227,7 +224,7 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-/*  // loop over records
+    /*  // loop over records
     for await (const record of payload) {
       let geojson;
       if (!record.attributes.geostore.geojson) {
@@ -264,7 +261,7 @@ class FileService {
       }
     } */
     let shapeArray = {
-      type: 'FeatureCollection',
+      type: "FeatureCollection",
       features: []
     };
     for await (const record of payload) {
@@ -280,7 +277,7 @@ class FileService {
             image: `image: ${record.attributes.image.toString()}`
           };
         });
-        shapeArray.features.push(...geojson.features)
+        shapeArray.features.push(...geojson.features);
         //let shpfile = shpwrite.zip(geojson);
         //let shpfile = await ConvertService.geojsonToShp(geojson)
         //archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
@@ -295,12 +292,12 @@ class FileService {
             image: `image: ${record.attributes.image.toString()}`
           };
         });
-        shapeArray.features.push(...geojson.features)
+        shapeArray.features.push(...geojson.features);
         //let shpfile = shpwrite.zip(geojson);
         //let shpfile = await ConvertService.geojsonToShp(geojson)
         //archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
-    } 
+    }
     let shpfile = shpwrite.zip(shapeArray);
     archive.append(shpfile, { name: `areas.zip` });
     archive.finalize();

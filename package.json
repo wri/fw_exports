@@ -31,10 +31,11 @@
     "koa-mount": "^4.0.0",
     "koa-router": "^10.1.1",
     "koa-simple-healthcheck": "^0.0.1",
-    "mongoose": "^4.13.13",
+    "mongoose": "^6.6.0",
     "pdfkit": "^0.13.0",
     "redis": "^4.2.0",
     "shp-write": "^0.3.2",
+    "sparkpost": "^2.1.4",
     "stream-buffers": "^3.0.2",
     "uuid": "^8.3.2"
   },
