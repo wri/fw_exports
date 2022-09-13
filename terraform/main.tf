@@ -46,8 +46,13 @@ module "fargate_autoscaling" {
   task_execution_role_policies = [
     data.terraform_remote_state.core.outputs.document_db_secrets_policy_arn,
     data.terraform_remote_state.fw_core.outputs.gfw_data_api_key_secret_policy_arn,
+    module.SPARKPOST_API_KEY.read_policy_arn,
   ]
   container_definition = data.template_file.container_definition.rendered
+
+  depends_on = [
+    module.SPARKPOST_API_KEY
+  ]
 
   # Listener rule inputs
   lb_target_group_arn = module.fargate_autoscaling.lb_target_group_arn
@@ -58,7 +63,12 @@ module "fargate_autoscaling" {
   priority = 8
 }
 
-
+module "SPARKPOST_API_KEY" {
+  source        = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/secrets?ref=v0.5.1"
+  project       = var.project_prefix
+  name          = "${var.project_prefix}-SPARKPOST_API_KEY"
+  secret_string = var.SPARKPOST_API_KEY
+}
 
 data "template_file" "container_definition" {
   template = file("${path.root}/templates/container_definition.json.tmpl")
@@ -84,6 +94,7 @@ data "template_file" "container_definition" {
     s3_bucket               = var.s3_bucket
     s3_access_key_id        = var.s3_access_key_id
     s3_secret_access_key    = var.s3_secret_access_key
+    SPARKPOST_API_KEY       = module.SPARKPOST_API_KEY.secret_arn
   }
 
 }

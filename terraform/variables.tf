@@ -87,3 +87,6 @@ variable "geostore_api_url" {
   type    = string
   default = "https://api.resourcewatch.org/v1"
 }
+variable "SPARKPOST_API_KEY" {
+  type = string
+}
