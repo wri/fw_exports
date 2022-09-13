@@ -93,9 +93,9 @@ const getAreas = async (ctx, next) => {
   let uniqueAreas = [];
   areas.forEach(area => {
     // find that area in unique area array
-    let existingArea = uniqueAreas.find(uniqueArea => uniqueArea.id.toString() === area.id.toString())
-    if(!existingArea) uniqueAreas.push(area);
-  })
+    let existingArea = uniqueAreas.find(uniqueArea => uniqueArea.id.toString() === area.id.toString());
+    if (!existingArea) uniqueAreas.push(area);
+  });
 
   ctx.payload = uniqueAreas;
   await next();
