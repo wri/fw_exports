@@ -61,6 +61,8 @@ paths:
                   type: array
                   items:
                     type: string
+                email:
+                  type: string
             examples:
               example-1:
                 value:
@@ -107,6 +109,8 @@ paths:
                   type: array
                   items:
                     type: string
+                email:
+                  type: string
         description: ''
   '/v3/exports/reports/{id}':
     parameters:
@@ -266,5 +270,34 @@ components:
                 type: array
                 items:
                   type: string
+              email:
+                type: string
+    Export-answers-request:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileType:
+                type: string
+              fields:
+                type: array
+                items:
+                  type: string
+              language:
+                type: string
+              ids:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    templateId:
+                      type: string
+                    reportId:
+                      type: string
+              email:
+                type: string
+            required:
+              - ids
 security:
   - Authorization: []
