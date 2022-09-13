@@ -12,12 +12,13 @@ const FileService = require("../../services/areaFile.service");
 import createShareableLink from "services/s3.service";
 const BucketURLModel = require("../../models/bucketURL.model");
 const { ObjectId } = require("mongoose").Types;
+const SparkpostService = require("../../services/sparkpost.service");
 
 const router = new Router({
   prefix: "/exports/areas"
 });
 
-const exportFunction = async (id, payload, fields, fileType) => {
+const exportFunction = async (id, payload, fields, fileType, email) => {
   let file = "";
 
   try {
@@ -45,6 +46,8 @@ const exportFunction = async (id, payload, fields, fileType) => {
       body: file
     });
 
+    if (email) SparkpostService.sendMail(email, URL);
+
     const newURL = new BucketURLModel({ id: id, URL: URL });
     newURL.save();
   } catch (error) {
@@ -71,7 +74,7 @@ class AreaRouter {
 
     const objId = new ObjectId();
 
-    exportFunction(objId, ctx.payload, fields, ctx.request.body.fileType);
+    exportFunction(objId, ctx.payload, fields, ctx.request.body.fileType, ctx.request.body.email);
 
     ctx.body = { data: objId };
     ctx.status = 200;
