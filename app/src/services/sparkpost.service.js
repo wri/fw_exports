@@ -11,7 +11,6 @@ class SparkpostService {
         sparky.transmissions
             .send({
                 options: {
-                    sandbox: true
                 },
                 content: {
                     from: "noreply@globalforestwatch.org",
