@@ -49,7 +49,7 @@ class FileService {
               textToPrint = textToPrint + `(${point.lon} ${point.lat}), `
             })
             textToPrint.slice(0,-1);
-            textToPring.slice(0,-1);
+            textToPrint.slice(0,-1);
             textToPrint = textToPrint + ")"
           }
           else { // if it's an array of coordinates
@@ -380,7 +380,7 @@ class FileService {
               textToPrint = textToPrint + `(${point.lon} ${point.lat}), `
             })
             textToPrint.slice(0,-1);
-            textToPring.slice(0,-1);
+            textToPrint.slice(0,-1);
             textToPrint = textToPrint + ")"
           }
           else { // if it's an array of coordinates
