@@ -1,7 +1,7 @@
 const archiver = require("archiver");
 const streamBuffers = require("stream-buffers");
 const AlertService = require("./alerts.service");
-//const ConvertService = require("./convert.service");
+const ConvertService = require("./convert.service");
 const { parse } = require("json2csv");
 const shpwrite = require("shp-write");
 const GeostoreService = require("./geostore.service");
@@ -304,6 +304,10 @@ class FileService {
         //archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
     }
+    let othershpfile = await ConvertService.geojsonToShp(shapeArray);
+    // eslint-disable-next-line prettier/prettier
+    console.log("******",othershpfile)
+    archive.append(othershpfile, { name: "other.shz" });
     let shpfile = shpwrite.zip(shapeArray);
     archive.append(shpfile, { name: `areas.zip` });
     archive.finalize();
