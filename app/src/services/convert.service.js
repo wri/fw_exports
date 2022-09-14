@@ -6,7 +6,6 @@ import querystring from "querystring";
 class ConvertService {
   static async geojsonToShp(geojson) {
     logger.info(`Converting geojson ${{ ...geojson }}`);
-    console.log("*******", geojson.type, geojson.features)
     try {
       const response = await axios.post(
         `http://ogre.adc4gis.com/convertJson`,

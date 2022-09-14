@@ -304,12 +304,12 @@ class FileService {
         //archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
     }
-    let othershpfile = await ConvertService.geojsonToShp(shapeArray);
+    let shpfile = await ConvertService.geojsonToShp(shapeArray);
     // eslint-disable-next-line prettier/prettier
-    console.log("******",othershpfile)
-    archive.append(othershpfile, { name: "other.shz" });
-    let shpfile = shpwrite.zip(shapeArray);
-    archive.append(shpfile, { name: `areas.zip` });
+    //console.log("******",othershpfile)
+    archive.append(shpfile, { name: "areas.zip" });
+    /*     let shpfile = shpwrite.zip(shapeArray);
+    archive.append(shpfile, { name: `areas.zip` }); */
     archive.finalize();
 
     return new Promise((resolve, reject) => {
