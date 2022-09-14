@@ -2,6 +2,7 @@
 import logger from "../logger";
 import axios from "axios";
 import querystring from "querystring";
+import admZip from "adm-zip";
 
 class ConvertService {
   static async geojsonToShp(geojson) {
@@ -13,6 +14,12 @@ class ConvertService {
         {headers: {'content-type': 'application/x-www-form-urlencoded'}, responseType: "arraybuffer"}
       );
       const shp = response.data;
+
+/*       // unzip and rezip?
+      const zip = new admZip(shp)
+      const zipEntries = zip.getEntries();
+      console.log("******ZIP ENTRIES ******", zipEntries.length); */
+
       logger.info("Got shapefile");
       return shp;
     } catch (e) {
