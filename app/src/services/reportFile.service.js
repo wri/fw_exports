@@ -2,12 +2,12 @@ const { parse } = require("json2csv");
 const archiver = require("archiver");
 import axios from "axios";
 const streamBuffers = require("stream-buffers");
-const shpwrite = require("shp-write");
+//const shpwrite = require("shp-write");
 const PDFDocument = require("pdfkit");
 const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
 
-const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition", "clickedPosition"];
+const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition"];
 
 class FileService {
   static async createCsv(payload, fields, templates, language) {
@@ -262,12 +262,15 @@ class FileService {
       } else continue;
       shapeArray.features.push(shape);
     }
-    let originalshpfile = shpwrite.zip(shapeArray);
+
+    console.log(shapeArray);
+
+    //let originalshpfile = shpwrite.zip(shapeArray);
 
     let newshpfile = await ConvertService.geojsonToShp(shapeArray);
 
-    archive.append(originalshpfile, { name: `reports.zip` });
-    archive.append(newshpfile, { name: "other.shz" });
+    //archive.append(originalshpfile, { name: `reports.zip` });
+    archive.append(newshpfile, { name: "reports.shz" });
     archive.finalize();
 
     return new Promise((resolve, reject) => {
@@ -447,6 +450,39 @@ class FileService {
           .fontSize(12)
           .text(responseToShow, 50, lineY + 30 + 50 * i);
       });
+
+      if (fields.includes("clickedPosition")) {
+        doc.image(images.clickedPosition.data, 50, 270 + 50 * record.attributes.responses.length, { fit: [20, 20] });
+        let fieldName = "";
+        if (titles[language].clickedPosition) fieldName = titles[language].clickedPosition;
+        else fieldName = "Clicked Position";
+        doc
+          .font("Helvetica")
+          .fontSize(12)
+          .text(fieldName.toUpperCase(), 80, 270 + 50 * record.attributes.responses.length);
+        let textToPrint = "";
+        if (Array.isArray(record.attributes.clickedPosition)) {
+          // if it's coordinates
+          if (typeof record.attributes.clickedPosition[0] === "object") {
+            // if it's an array of objects ({lon: number, lat: number})
+            if (record.attributes.clickedPosition.length > 1) {
+              textToPrint = "MULTIPOINT (";
+              record.attributes.clickedPosition.forEach(point => {
+                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+              });
+              textToPrint.slice(0, -1);
+              textToPrint.slice(0, -1);
+              textToPrint = textToPrint + ")";
+            } else {
+              textToPrint = `POINT (${record.attributes.clickedPosition[0].lon} ${record.attributes.clickedPosition[0].lat})`;
+            }
+          } else {
+            // if it's an array of coordinates
+            textToPrint = `POINT (${record.attributes.clickedPosition[0]} ${record.attributes.clickedPosition[1]})`;
+          }
+        } else textToPrint = record.attributes.clickedPosition;
+        doc.fontSize(15).text(textToPrint, 80, 290 + 50 * record.attributes.responses.length);
+      }
 
       doc.end();
 
