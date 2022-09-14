@@ -3,7 +3,7 @@ const streamBuffers = require("stream-buffers");
 const AlertService = require("./alerts.service");
 const ConvertService = require("./convert.service");
 const { parse } = require("json2csv");
-const shpwrite = require("shp-write");
+//const shpwrite = require("shp-write");
 const GeostoreService = require("./geostore.service");
 
 const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition", "clickedPosition"];

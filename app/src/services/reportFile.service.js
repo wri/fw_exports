@@ -2,8 +2,9 @@ const { parse } = require("json2csv");
 const archiver = require("archiver");
 import axios from "axios";
 const streamBuffers = require("stream-buffers");
-const shpwrite = require("shp-write");
+//const shpwrite = require("shp-write");
 const PDFDocument = require("pdfkit");
+const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
 
 const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition", "clickedPosition"];
@@ -257,7 +258,10 @@ class FileService {
       } else continue;
       shapeArray.features.push(shape);
     }
-    let shpfile = shpwrite.zip(shapeArray);
+    //let shpfile = shpwrite.zip(shapeArray);
+
+    let shpfile = await ConvertService.geojsonToShp(shapeArray);
+
     archive.append(shpfile, { name: `reports.zip` });
     archive.finalize();
 
