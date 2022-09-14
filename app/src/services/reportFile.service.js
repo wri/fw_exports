@@ -40,13 +40,17 @@ class FileService {
           // if it's coordinates
           if (typeof record.attributes[property][0] === "object") {
             // if it's an array of objects ({lon: number, lat: number})
-            textToPrint = "MULTIPOINT (";
-            record.attributes[property].forEach(point => {
-              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
-            });
-            textToPrint.slice(0, -1);
-            textToPrint.slice(0, -1);
-            textToPrint = textToPrint + ")";
+            if (record.attributes[property].length > 1) {
+              textToPrint = "MULTIPOINT (";
+              record.attributes[property].forEach(point => {
+                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+              });
+              textToPrint.slice(0, -1);
+              textToPrint.slice(0, -1);
+              textToPrint = textToPrint + ")";
+            } else {
+              textToPrint = `POINT (${record.attributes[property][0].lon} ${record.attributes[property][0].lat})`;
+            }
           } else {
             // if it's an array of coordinates
             textToPrint = `POINT (${record.attributes[property][0]} ${record.attributes[property][1]})`;
@@ -396,13 +400,17 @@ class FileService {
           // if it's coordinates
           if (typeof record.attributes[field][0] === "object") {
             // if it's an array of objects ({lon: number, lat: number})
-            textToPrint = "MULTIPOINT (";
-            record.attributes[field].forEach(point => {
-              textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
-            });
-            textToPrint.slice(0, -1);
-            textToPrint.slice(0, -1);
-            textToPrint = textToPrint + ")";
+            if (record.attributes[field].length > 1) {
+              textToPrint = "MULTIPOINT (";
+              record.attributes[field].forEach(point => {
+                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+              });
+              textToPrint.slice(0, -1);
+              textToPrint.slice(0, -1);
+              textToPrint = textToPrint + ")";
+            } else {
+              textToPrint = `POINT (${record.attributes[field][0].lon} ${record.attributes[field][0].lat})`;
+            }
           } else {
             // if it's an array of coordinates
             textToPrint = `POINT (${record.attributes[field][0]} ${record.attributes[field][1]})`;
