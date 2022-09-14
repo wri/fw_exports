@@ -209,7 +209,7 @@ class FileService {
     });
   }
 
-  static async createShape(payload) {
+  static async createShape(payload, fields) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -227,13 +227,19 @@ class FileService {
       features: []
     };
 
+    // sanitise fields
+    const filteredFields = allowedFields.filter(value => fields.includes(value));
+
     for await (const record of payload) {
       let shape = {
         type: "Feature",
         properties: {
-          ...record.attributes
+          id: record.id
         }
       };
+      filteredFields.forEach(field => {
+        if (record.attributes[field]) shape.properties[field] = record.attributes[field];
+      });
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {

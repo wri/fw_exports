@@ -28,7 +28,7 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
         file = await FileService.createGeojson(payload);
         break;
       case "shp":
-        file = await FileService.createShape(payload);
+        file = await FileService.createShape(payload, fields);
         break;
       case "csv":
         file = await FileService.createCsv(payload, fields, templates, language);

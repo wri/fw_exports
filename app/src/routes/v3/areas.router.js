@@ -25,10 +25,10 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
     // create file
     switch (fileType) {
       case "geojson":
-        file = await FileService.createGeojson(payload);
+        file = await FileService.createGeojson(payload, fields);
         break;
       case "shp":
-        file = await FileService.createShape(payload);
+        file = await FileService.createShape(payload, fields);
         break;
       case "fwbundle":
         file = await FileService.createBundle(payload);
