@@ -6,6 +6,8 @@ const { parse } = require("json2csv");
 const shpwrite = require("shp-write");
 const GeostoreService = require("./geostore.service");
 
+const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition", "clickedPosition"];
+
 class FileService {
   static async createBundle(payload) {
     // create a fwbundle
@@ -211,7 +213,7 @@ class FileService {
     });
   }
 
-  static async createShape(payload) {
+  static async createShape(payload, fields) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -260,6 +262,10 @@ class FileService {
         archive.append(shpfile, { name: `${record.attributes.name}${record.id}.zip` });
       }
     } */
+
+    // sanitise fields
+    const filteredFields = allowedFields.filter(value => fields.includes(value));
+
     let shapeArray = {
       type: "FeatureCollection",
       features: []
@@ -271,11 +277,11 @@ class FileService {
         geojson = geojsonResponse.geojson;
         geojson.features.forEach(feature => {
           feature.properties = {
-            id: `id: ${record.id.toString()}`,
-            name: `name: ${record.attributes.name.toString()}`,
-            createdAt: `createdAt: ${record.attributes.createdAt.toString()}`,
-            image: `image: ${record.attributes.image.toString()}`
+            id: record.id.toString()
           };
+          filteredFields.forEach(field => {
+            if (record.attributes[field]) feature.properties[field] = record.attributes[field];
+          });
         });
         shapeArray.features.push(...geojson.features);
         //let shpfile = shpwrite.zip(geojson);
@@ -286,10 +292,10 @@ class FileService {
         geojson = record.attributes.geostore.geojson;
         geojson.features.forEach(feature => {
           feature.properties = {
-            id: `id: ${record.id.toString()}`,
-            name: `name: ${record.attributes.name.toString()}`,
-            createdAt: `createdAt: ${record.attributes.createdAt.toString()}`,
-            image: `image: ${record.attributes.image.toString()}`
+            id: record.id.toString(),
+            name: record.attributes.name.toString(),
+            createdAt: record.attributes.createdAt.toString(),
+            image: record.attributes.image.toString()
           };
         });
         shapeArray.features.push(...geojson.features);

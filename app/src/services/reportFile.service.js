@@ -4,7 +4,7 @@ import axios from "axios";
 const streamBuffers = require("stream-buffers");
 const shpwrite = require("shp-write");
 const PDFDocument = require("pdfkit");
-const GeostoreService = require("./geostore.service");
+//const GeostoreService = require("./geostore.service");
 
 const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition", "clickedPosition"];
 
@@ -237,7 +237,7 @@ class FileService {
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
-          coordinates.push(position);
+          coordinates.push([position.lat, position.lon]);
         });
         shape.geometry = {
           type: "MultiPoint",
@@ -246,7 +246,7 @@ class FileService {
       } else if (record.attributes.clickedPosition && record.attributes.clickedPosition.length === 1) {
         shape.geometry = {
           type: "Point",
-          coordinates: record.attributes.clickedPosition
+          coordinates: [record.attributes.clickedPosition[0].lat, record.attributes.clickedPosition[0].lon
         };
       } else continue;
       shapeArray.features.push(shape);
