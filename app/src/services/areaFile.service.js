@@ -307,7 +307,7 @@ class FileService {
     let shpfile = await ConvertService.geojsonToShp(shapeArray);
     // eslint-disable-next-line prettier/prettier
     //console.log("******",othershpfile)
-    archive.append(shpfile, { name: "areas.shz" });
+    archive.append(shpfile, { name: "areas.zip" });
     /*     let shpfile = shpwrite.zip(shapeArray);
     archive.append(shpfile, { name: `areas.zip` }); */
     archive.finalize();

@@ -263,14 +263,12 @@ class FileService {
       shapeArray.features.push(shape);
     }
 
-    console.log(shapeArray);
-
     //let originalshpfile = shpwrite.zip(shapeArray);
 
     let newshpfile = await ConvertService.geojsonToShp(shapeArray);
 
     //archive.append(originalshpfile, { name: `reports.zip` });
-    archive.append(newshpfile, { name: "reports.shz" });
+    archive.append(newshpfile, { name: "reports.zip" });
     archive.finalize();
 
     return new Promise((resolve, reject) => {

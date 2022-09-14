@@ -15,13 +15,19 @@ class ConvertService {
       );
       const shp = response.data;
 
-/*       // unzip and rezip?
-      const zip = new admZip(shp)
+      // unzip and rezip?
+      const zip = new admZip(shp);
+      const rezip = new admZip();
       const zipEntries = zip.getEntries();
-      console.log("******ZIP ENTRIES ******", zipEntries.length); */
+      console.log("******ZIP ENTRIES ******", zipEntries.length);
+      zipEntries.forEach(entry => {
+        rezip.addFile(entry.entryName, entry.getData())
+      });
+
+      const shpToWrite = rezip.toBuffer();
 
       logger.info("Got shapefile");
-      return shp;
+      return shpToWrite;
     } catch (e) {
       logger.error("Error while converting shapefile", e);
     }
