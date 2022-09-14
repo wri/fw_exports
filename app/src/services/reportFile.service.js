@@ -246,7 +246,7 @@ class FileService {
       } else if (record.attributes.clickedPosition && record.attributes.clickedPosition.length === 1) {
         shape.geometry = {
           type: "Point",
-          coordinates: [record.attributes.clickedPosition[0].lat, record.attributes.clickedPosition[0].lon
+          coordinates: [record.attributes.clickedPosition[0].lat, record.attributes.clickedPosition[0].lon]
         };
       } else continue;
       shapeArray.features.push(shape);
