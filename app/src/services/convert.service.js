@@ -16,13 +16,8 @@ class ConvertService {
       const shp = response.data;
 
       // unzip and rezip?
-      const zip = new admZip(shp);
       const rezip = new admZip();
-      const zipEntries = zip.getEntries();
-      console.log("******ZIP ENTRIES ******", zipEntries.length);
-      zipEntries.forEach(entry => {
-        rezip.addFile(entry.entryName, entry.getData())
-      });
+      rezip.addFile("other.shz", shp)
 
       const shpToWrite = rezip.toBuffer();
 
