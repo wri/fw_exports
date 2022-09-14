@@ -1,5 +1,37 @@
 {
   "service": {
     "port": "PORT"
+  },
+  "s3": {
+    "accessKeyId": "S3_ACCESS_KEY_ID",
+    "secretAccessKey": "S3_SECRET_ACCESS_KEY",
+    "bucket": "S3_BUCKET"
+  },
+  "formsAPI": {
+    "url": "FORMS_API_URL"
+  },
+  "areasAPI": {
+    "url": "AREAS_API_URL"
+  },
+  "alertsAPI": {
+    "url": "ALERTS_API_URL"
+  },
+  "gfwApiKey": {
+    "apiKey": "GFW_DATA_API_KEY"
+  },
+  "sparkpost": {
+    "apiKey": "SPARKPOST_API_KEY"
+  },
+  "geostoreAPI": {
+    "url": "GEOSTORE_API_URL"
+  },
+  "auth": {
+    "url": "AUTH_URL"
+  },
+  "mongodb": {
+    "host": "MONGODB_HOST",
+    "port": "MONGODB_PORT",
+    "secret": "DB_SECRET",
+    "database": "DB_DATABASE"
   }
 }
