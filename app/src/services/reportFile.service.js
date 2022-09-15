@@ -123,6 +123,7 @@ class FileService {
 
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
+        logger.info("Finished buffering");
         const contents = myWritableStreamBuffer.getContents();
         resolve(contents);
       });
