@@ -48,7 +48,10 @@ class FileService {
     // create array of questions. There will be lots of questions depending on the number of templates.
     let questions = [];
     templates.forEach(template => {
-      questions.push(...template.attributes.questions);
+      template.attributes.questions.forEach(question => {
+        questions.push(question);
+        if (question.childQuestions && question.childQuestions.length > 0) questions.push(...question.childQuestions);
+      });
     });
 
     // flatten object
@@ -399,7 +402,10 @@ class FileService {
     // create array of questions. There will be lots of questions depending on the number of templates.
     let questions = [];
     templates.forEach(template => {
-      questions.push(...template.attributes.questions);
+      template.attributes.questions.forEach(question => {
+        questions.push(question);
+        if (question.childQuestions && question.childQuestions.length > 0) questions.push(...question.childQuestions);
+      });
     });
 
     // sanitise fields
