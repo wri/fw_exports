@@ -52,7 +52,7 @@ class FileService {
     for await (const record of payload) {
       for (const property in record.attributes) {
         let textToPrint = "";
-        if (Array.isArray(record.attributes[property])) {
+        if (Array.isArray(record.attributes[property]) && property !== "responses") {
           // if it's coordinates
           if (typeof record.attributes[property][0] === "object") {
             // if it's an array of objects ({lon: number, lat: number})
@@ -74,12 +74,14 @@ class FileService {
         } else textToPrint = record.attributes[property];
         record[property] = textToPrint;
       }
+      console.log(record.responses)
 
       // loop over responses
       for await (const response of record.responses) {
         // find the question in questions, if not found, add
         let question = questions.find(question => question.name === response.name);
         if (!question) {
+          console.log(response)
           question = { name: response.name, label: { [language]: response.name } };
           questions.push(question);
         }
@@ -107,6 +109,8 @@ class FileService {
       if (titles[language][field]) return { label: titles[language][field], value: field };
       else return field;
     });
+
+    console.log(columnLabels)
 
     const opts = { fields: columnLabels };
     const csv = parse(payload, opts);
