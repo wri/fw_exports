@@ -536,7 +536,16 @@ const titles = {
     language: "Language",
     userPosition: "User Position",
     reportedPosition: "Reported Position",
-    layer: "Alert"
+    layer: "Alert",
+    reportName: "Report Name",
+    report: "Template ID",
+    templateName: "Temaplate Name",
+    teamId: "Team ID",
+    areaOfInterest: "Area ID",
+    startDate: "Start Date",
+    endDate: "End Date",
+    user: "Monitor ID",
+    clickedPosition: "Reported Position"
   },
 
   es: {
@@ -546,6 +555,7 @@ const titles = {
     language: "Idioma",
     userPosition: "Posición del usuario",
     reportedPosition: "Posición del reporte",
+    clickedPosition: "Posición del reporte",
     layer: "Alerta"
   },
 
@@ -556,6 +566,7 @@ const titles = {
     language: "Langue",
     userPosition: "Position de l'utilisateur",
     reportedPosition: "Position signalée",
+    clickedPosition: "Position signalée",
     layer: "Alerte"
   },
 
@@ -566,6 +577,7 @@ const titles = {
     language: "Bahasa",
     userPosition: "Posisi Pengguna",
     reportedPosition: "Posisi Terlapor",
+    clickedPosition: "Posisi Terlapor",
     layer: "Peringatan"
   },
 
@@ -576,6 +588,7 @@ const titles = {
     language: "Bahasa",
     userPosition: "Posisi Pengguna",
     reportedPosition: "Posisi Terlapor",
+    clickedPosition: "Posisi Terlapor",
     layer: "Peringatan"
   },
 
@@ -586,6 +599,7 @@ const titles = {
     language: "Taal",
     userPosition: "Gebruikers locatie",
     reportedPosition: "Gerapporteerde locatie",
+    clickedPosition: "Gerapporteerde locatie",
     layer: "Waarschuwing"
   },
 
@@ -596,6 +610,7 @@ const titles = {
     language: "Língua",
     userPosition: "Posição do usuário",
     reportedPosition: "Localização reportada",
+    clickedPosition: "Localização reportada",
     layer: "Alerta"
   }
 };
