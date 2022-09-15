@@ -112,6 +112,7 @@ class FileService {
 
     const columnLabels = fields.map(field => {
       if (titles[language][field]) return { label: titles[language][field], value: field };
+      else if (titles.en[field]) return { label: titles.en[field], value: field };
       else return field;
     });
 
@@ -428,6 +429,7 @@ class FileService {
         doc.image(images[field].data, 50 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50, { fit: [20, 20] });
         let fieldName = "";
         if (titles[language][field]) fieldName = titles[language][field];
+        else if (titles.en[field]) fieldName = titles.en[field];
         else fieldName = field;
         doc
           .font("Helvetica")
