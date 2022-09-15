@@ -74,14 +74,14 @@ class FileService {
         } else textToPrint = record.attributes[property];
         record[property] = textToPrint;
       }
-      console.log(record.responses)
+      console.log(record.responses);
 
       // loop over responses
       for await (const response of record.responses) {
         // find the question in questions, if not found, add
         let question = questions.find(question => question.name === response.name);
         if (!question) {
-          console.log(response)
+          console.log(response);
           question = { name: response.name, label: { [language]: response.name } };
           questions.push(question);
         }
@@ -110,7 +110,7 @@ class FileService {
       else return field;
     });
 
-    console.log(columnLabels)
+    console.log(columnLabels);
 
     const opts = { fields: columnLabels };
     const csv = parse(payload, opts);
