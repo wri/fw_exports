@@ -8,8 +8,8 @@ const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
 
 const allowedFields = [
-  "report",
   "reportName",
+  "report",
   "templateName",
   "fullName",
   "teamId",
@@ -21,7 +21,8 @@ const allowedFields = [
   "endDate",
   "layer",
   "user",
-  "createdAt"
+  "createdAt",
+  "clickedPosition"
 ];
 
 class FileService {
@@ -391,10 +392,9 @@ class FileService {
     });
 
     // sanitise fields
-    const filteredFields = allowedFields.filter(value => fields.includes(value));
-
-    console.log(filteredFields);
-    console.log(payload);
+    const filteredFields = allowedFields.filter(value => {
+      return fields.includes(value) && value !== "clickedPosition" && value !== "reportName";
+    });
 
     for await (const record of payload) {
       var docStreamBuffer = new streamBuffers.WritableStreamBuffer({
