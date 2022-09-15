@@ -372,6 +372,16 @@ class FileService {
     images.clickedPosition = await axios.get("https://cdn-icons-png.flaticon.com/512/70/70699.png", {
       responseType: "arraybuffer"
     });
+    images.areaOfInterest = await axios.get("https://cdn-icons-png.flaticon.com/512/3381/3381635.png", {
+      responseType: "arraybuffer"
+    });
+    images.language = await axios.get("https://cdn-icons-png.flaticon.com/512/484/484633.png", {
+      responseType: "arraybuffer"
+    });
+    images.user = images.areaOfInterest;
+    images.teamId = images.user;
+    images.startDate = images.createdAt;
+    images.endDate = images.startDate;
     images.userPosition = images.clickedPosition;
 
     // create array of questions. There will be lots of questions depending on the number of templates.
