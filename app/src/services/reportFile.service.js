@@ -76,33 +76,33 @@ class FileService {
         record[property] = textToPrint;
       }
 
-        // loop over responses
-        for await (const response of record.responses) {
-          // find the question in questions, if not found, add
-          let question = questions.find(question => question.name === response.name);
-          if (!question) {
-            question = { name: response.name, label: { [language]: response.name } };
-            questions.push(question);
-          }
-          // check if the answer is an image
-          if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-            // download the image
-            const image = await axios({
-              url: response.value,
-              responseType: "stream",
-              responseEncoding: "utf-8"
-            });
-            // save it to the directory - directory name should be name of report/name of question
-            const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
-            archive.append(image.data, { name: imagePath });
-            // add the path to the csv file
-            record[question.label[language]] = imagePath;
-          } else record[question.label[language]] = response.value;
+      // loop over responses
+      for await (const response of record.responses) {
+        // find the question in questions, if not found, add
+        let question = questions.find(question => question.name === response.name);
+        if (!question) {
+          question = { name: response.name, label: { [language]: response.name } };
+          questions.push(question);
         }
+        // check if the answer is an image
+        if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
+          // download the image
+          const image = await axios({
+            url: response.value,
+            responseType: "stream",
+            responseEncoding: "utf-8"
+          });
+          // save it to the directory - directory name should be name of report/name of question
+          const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
+          archive.append(image.data, { name: imagePath });
+          // add the path to the csv file
+          record[question.label[language]] = imagePath;
+        } else record[question.label[language]] = response.value;
+      }
     }
 
-      fields.splice(fields.indexOf("responses"), 1);
-      fields.push(...questions.map(question => question.label[language]));
+    fields.splice(fields.indexOf("responses"), 1);
+    fields.push(...questions.map(question => question.label[language]));
 
     const columnLabels = fields.map(field => {
       if (titles[language][field]) return { label: titles[language][field], value: field };
