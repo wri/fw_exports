@@ -12,8 +12,6 @@ const allowedFields = [
   "reportName",
   "templateName",
   "fullName",
-  "username",
-  "organization",
   "teamId",
   "areaOfInterest",
   "areaOfInterestName",
