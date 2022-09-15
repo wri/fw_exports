@@ -314,8 +314,8 @@ class FileService {
 
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
-        const contents = myWritableStreamBuffer.getContents();
-        resolve(contents);
+        //const contents = myWritableStreamBuffer.getContents();
+        resolve(shpfile);
       });
       myWritableStreamBuffer.on("error", reject);
     });

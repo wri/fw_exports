@@ -41,13 +41,21 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
         break;
     }
 
-    const zip = new AdmZip(file);
-
-    // read the zip file and upload to s3 bucket
-    const URL = await createShareableLink({
-      extension: `shz`, // `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-      body: zip.getData()
-    });
+    let URL = "";
+    if (fileType === "shp") {
+      const zip = new AdmZip(file);
+      // read the zip file and upload to s3 bucket
+      URL = await createShareableLink({
+        extension: `.zip`, // `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
+        body: zip.toBuffer()
+      });
+    } else {
+      // read the zip file and upload to s3 bucket
+      URL = await createShareableLink({
+        extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
+        body: file
+      });
+    }
 
     if (email) SparkpostService.sendMail(email, URL);
 
