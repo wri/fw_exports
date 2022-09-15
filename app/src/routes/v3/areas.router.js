@@ -13,6 +13,7 @@ import createShareableLink from "services/s3.service";
 const BucketURLModel = require("../../models/bucketURL.model");
 const { ObjectId } = require("mongoose").Types;
 const SparkpostService = require("../../services/sparkpost.service");
+const AdmZip = require("adm-zip");
 
 const router = new Router({
   prefix: "/exports/areas"
@@ -40,10 +41,12 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
         break;
     }
 
+    const zip = new AdmZip(file);
+
     // read the zip file and upload to s3 bucket
     const URL = await createShareableLink({
-      extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-      body: file
+      extension: `shz`, // `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
+      body: zip.getData()
     });
 
     if (email) SparkpostService.sendMail(email, URL);

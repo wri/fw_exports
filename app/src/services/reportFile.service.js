@@ -7,7 +7,24 @@ const PDFDocument = require("pdfkit");
 const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
 
-const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition"];
+const allowedFields = [
+  "report",
+  "reportName",
+  "templateName",
+  "fullName",
+  "username",
+  "organization",
+  "teamId",
+  "areaOfInterest",
+  "areaOfInterestName",
+  "language",
+  "userPosition",
+  "startDate",
+  "endDate",
+  "layer",
+  "user",
+  "createdAt"
+];
 
 class FileService {
   static async createCsv(payload, fields, templates, language) {
@@ -59,7 +76,6 @@ class FileService {
         record[property] = textToPrint;
       }
 
-      if (fields.includes("responses")) {
         // loop over responses
         for await (const response of record.responses) {
           // find the question in questions, if not found, add
@@ -83,14 +99,10 @@ class FileService {
             record[question.label[language]] = imagePath;
           } else record[question.label[language]] = response.value;
         }
-      }
     }
 
-    // remove "questions" from
-    if (fields.includes("responses")) {
       fields.splice(fields.indexOf("responses"), 1);
       fields.push(...questions.map(question => question.label[language]));
-    }
 
     const columnLabels = fields.map(field => {
       if (titles[language][field]) return { label: titles[language][field], value: field };
