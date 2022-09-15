@@ -385,6 +385,10 @@ class FileService {
     images.language = await axios.get("https://cdn-icons-png.flaticon.com/512/484/484633.png", {
       responseType: "arraybuffer"
     });
+    images.templateName = await axios.get("https://cdn-icons-png.flaticon.com/512/2991/2991112.png", {
+      responseType: "arraybuffer"
+    });
+    images.report = images.areaOfInterest;
     images.user = images.areaOfInterest;
     images.teamId = images.user;
     images.startDate = images.createdAt;
@@ -407,12 +411,12 @@ class FileService {
         initialSize: 100 * 1024, // start at 100 kilobytes.
         incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
       });
-
+      console.log(record);
       const doc = new PDFDocument({ size: "A4" });
       doc.pipe(docStreamBuffer);
 
-      doc.fontSize(15).text("Monitoring Report", 50, 80);
-      doc.font("Helvetica-Bold").fontSize(15).text(record.attributes.reportName.toUpperCase(), 50, 105);
+      doc.fontSize(14).text("Monitoring Report", 50, 80);
+      doc.font("Helvetica-Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
 
       filteredFields.forEach((field, i) => {
         doc.image(images[field].data, 50 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50, { fit: [20, 20] });
@@ -421,7 +425,7 @@ class FileService {
         else fieldName = field;
         doc
           .font("Helvetica")
-          .fontSize(12)
+          .fontSize(11)
           .text(fieldName.toUpperCase(), 80 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50);
         let textToPrint = "";
         if (Array.isArray(record.attributes[field])) {
@@ -444,13 +448,11 @@ class FileService {
             textToPrint = `POINT (${record.attributes[field][0]} ${record.attributes[field][1]})`;
           }
         } else textToPrint = record.attributes[field];
-        doc.fontSize(15).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
+        doc.fontSize(13).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
       });
-
-      const lineY = 50 + 50 * (filteredFields.length + (filteredFields.length % 2) / 2);
-
-      doc.moveTo(50, lineY).lineTo(500, lineY).stroke();
-
+      doc.moveDown(1);
+      doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
+      doc.moveDown(1);
       // loop over responses
       record.attributes.responses.forEach((response, i) => {
         let responseToShow = "";
@@ -465,25 +467,18 @@ class FileService {
           responseToShow = `Picture found at: ${response.value}`;
         } else responseToShow = response.value;
 
-        doc
-          .font("Helvetica-Bold")
-          .fontSize(12)
-          .text(question.label[language], 50, lineY + 15 + 50 * i);
-        doc
-          .font("Helvetica")
-          .fontSize(12)
-          .text(responseToShow, 50, lineY + 30 + 50 * i);
+        doc.font("Helvetica-Bold").fontSize(11).text(question.label[language], 50); //, lineY + 15 + 50 * i);
+        doc.moveDown(0.5);
+        doc.font("Helvetica").fontSize(11).text(responseToShow, 50); //, lineY + 30 + 50 * i);
+        doc.moveDown(1);
       });
 
       if (fields.includes("clickedPosition")) {
-        doc.image(images.clickedPosition.data, 50, 270 + 50 * record.attributes.responses.length, { fit: [20, 20] });
+        //doc.image(images.clickedPosition.data, 50, doc.y, { fit: [20, 20] }); //, 270 + 50 * record.attributes.responses.length, { fit: [20, 20] });
         let fieldName = "";
         if (titles[language].clickedPosition) fieldName = titles[language].clickedPosition;
         else fieldName = "Clicked Position";
-        doc
-          .font("Helvetica")
-          .fontSize(12)
-          .text(fieldName.toUpperCase(), 80, 270 + 50 * record.attributes.responses.length);
+        doc.font("Helvetica").fontSize(11).text(fieldName.toUpperCase(), 50, doc.y); //, 270 + 50 * record.attributes.responses.length);
         let textToPrint = "";
         if (Array.isArray(record.attributes.clickedPosition)) {
           // if it's coordinates
@@ -492,20 +487,21 @@ class FileService {
             if (record.attributes.clickedPosition.length > 1) {
               textToPrint = "MULTIPOINT (";
               record.attributes.clickedPosition.forEach(point => {
-                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+                textToPrint = textToPrint + `(${point.lat} ${point.lon}), `;
               });
               textToPrint.slice(0, -1);
               textToPrint.slice(0, -1);
               textToPrint = textToPrint + ")";
             } else {
-              textToPrint = `POINT (${record.attributes.clickedPosition[0].lon} ${record.attributes.clickedPosition[0].lat})`;
+              textToPrint = `POINT (${record.attributes.clickedPosition[0].lat} ${record.attributes.clickedPosition[0].lon})`;
             }
           } else {
             // if it's an array of coordinates
             textToPrint = `POINT (${record.attributes.clickedPosition[0]} ${record.attributes.clickedPosition[1]})`;
           }
         } else textToPrint = record.attributes.clickedPosition;
-        doc.fontSize(15).text(textToPrint, 80, 290 + 50 * record.attributes.responses.length);
+        doc.moveDown(0.5);
+        doc.fontSize(14).text(textToPrint, 50, doc.y); //, 290 + 50 * record.attributes.responses.length);
       }
 
       doc.end();
