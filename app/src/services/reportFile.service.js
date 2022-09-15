@@ -31,7 +31,7 @@ class FileService {
     // fields is an array of accepted fields
     // payload is an array of objects
 
-    logger.info(`Exporting ${payload.length} reports`)
+    logger.info(`Exporting ${payload.length} reports`);
 
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
@@ -53,7 +53,7 @@ class FileService {
 
     // flatten object
     for await (const record of payload) {
-      logger.info(`Exporting ${record.attributes.reportName}`)
+      logger.info(`Exporting ${record.attributes.reportName}`);
       for (const property in record.attributes) {
         let textToPrint = "";
         if (Array.isArray(record.attributes[property]) && property !== "responses") {
