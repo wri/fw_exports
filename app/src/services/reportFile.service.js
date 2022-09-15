@@ -92,17 +92,19 @@ class FileService {
         }
         // check if the answer is an image
         if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-          // download the image
-          const image = await axios({
-            url: response.value,
-            responseType: "stream",
-            responseEncoding: "utf-8"
-          });
-          // save it to the directory - directory name should be name of report/name of question
-          const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
-          archive.append(image.data, { name: imagePath });
-          // add the path to the csv file
-          record[question.label[language]] = imagePath;
+          if (payload.length < 20) {
+            // download the image
+            const image = await axios({
+              url: response.value,
+              responseType: "stream",
+              responseEncoding: "utf-8"
+            });
+            // save it to the directory - directory name should be name of report/name of question
+            const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
+            archive.append(image.data, { name: imagePath });
+            // add the path to the csv file
+            record[question.label[language]] = imagePath;
+          } else record[question.label[language]] = response.value;
         } else record[question.label[language]] = response.value;
       }
     }
@@ -193,24 +195,26 @@ class FileService {
         };
         // check if the answer is an image
         if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-          // download the image
-          const image = await axios({
-            url: response.value,
-            responseType: "stream",
-            responseEncoding: "utf-8"
-          });
-          // save it to the directory - directory name should be name of report/name of question
-          const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
-          archive.append(image.data, { name: imagePath });
-          answer.value = "image/jpeg";
-          // create record in manifest.reportFiles
-          bundle.manifest.reportFiles.push({
-            reportName: newRecord.reportName,
-            questionName: answer.questionName,
-            size: image.headers["content-length"],
-            path: imagePath,
-            type: "image/jpeg"
-          });
+          if (payload.length < 20) {
+            // download the image
+            const image = await axios({
+              url: response.value,
+              responseType: "stream",
+              responseEncoding: "utf-8"
+            });
+            // save it to the directory - directory name should be name of report/name of question
+            const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
+            archive.append(image.data, { name: imagePath });
+            answer.value = "image/jpeg";
+            // create record in manifest.reportFiles
+            bundle.manifest.reportFiles.push({
+              reportName: newRecord.reportName,
+              questionName: answer.questionName,
+              size: image.headers["content-length"],
+              path: imagePath,
+              type: "image/jpeg"
+            });
+          }
         }
         // check if the answer is a child
         // find an existing answer's question name inside this answer's question name
