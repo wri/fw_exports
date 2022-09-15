@@ -374,7 +374,7 @@ class FileService {
     images.createdAt = await axios.get("https://cdn-icons-png.flaticon.com/512/747/747310.png", {
       responseType: "arraybuffer"
     });
-    images.layer = await axios.get("https://cdn-icons-png.flaticon.com/512/126/126307.png", {
+    images.layer = await axios.get("https://cdn-icons-png.flaticon.com/512/497/497789.png", {
       responseType: "arraybuffer"
     });
     images.clickedPosition = await axios.get("https://cdn-icons-png.flaticon.com/512/70/70699.png", {
@@ -435,17 +435,26 @@ class FileService {
             if (record.attributes[field].length > 1) {
               textToPrint = "MULTIPOINT (";
               record.attributes[field].forEach(point => {
-                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+                textToPrint =
+                  textToPrint + `(${point.lon.toString().substring(0, 9)} ${point.lat.toString().substring(0, 9)}), `;
               });
               textToPrint.slice(0, -1);
               textToPrint.slice(0, -1);
               textToPrint = textToPrint + ")";
             } else {
-              textToPrint = `POINT (${record.attributes[field][0].lon} ${record.attributes[field][0].lat})`;
+              textToPrint = `POINT (${record.attributes[field][0].lon.toString().substring(0, 9)} ${record.attributes[
+                field
+              ][0].lat
+                .toString()
+                .substring(0, 9)})`;
             }
           } else {
             // if it's an array of coordinates
-            textToPrint = `POINT (${record.attributes[field][0]} ${record.attributes[field][1]})`;
+            textToPrint = `POINT (${record.attributes[field][0].toString().substring(0, 9)} ${record.attributes[
+              field
+            ][1]
+              .toString()
+              .substring(0, 9)})`;
           }
         } else textToPrint = record.attributes[field];
         doc.fontSize(13).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
@@ -541,7 +550,7 @@ const titles = {
     layer: "Alert",
     reportName: "Report Name",
     report: "Template ID",
-    templateName: "Temaplate Name",
+    templateName: "Template Name",
     teamId: "Team ID",
     areaOfInterest: "Area ID",
     startDate: "Start Date",

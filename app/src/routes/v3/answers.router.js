@@ -133,8 +133,9 @@ const getTemplates = async (ctx, next) => {
     const existing = templates.find(template => template.id === templateId);
     if (!existing) {
       const template = await AnswerService.getTemplate(templateId);
+      answer.attributes.templateName = template.attributes.name[ctx.request.body.language];
       templates.push(template);
-    }
+    } else answer.attributes.templateName = existing.attributes.name[ctx.request.body.language];
   }
   ctx.templates = templates;
   await next();
