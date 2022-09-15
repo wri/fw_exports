@@ -6,6 +6,7 @@ const streamBuffers = require("stream-buffers");
 const PDFDocument = require("pdfkit");
 const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
+import logger from "../logger";
 
 const allowedFields = [
   "reportName",
@@ -30,6 +31,8 @@ class FileService {
     // fields is an array of accepted fields
     // payload is an array of objects
 
+    logger.info(`Exporting ${payload.length} reports`)
+
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -50,6 +53,7 @@ class FileService {
 
     // flatten object
     for await (const record of payload) {
+      logger.info(`Exporting ${record.attributes.reportName}`)
       for (const property in record.attributes) {
         let textToPrint = "";
         if (Array.isArray(record.attributes[property]) && property !== "responses") {
@@ -74,14 +78,12 @@ class FileService {
         } else textToPrint = record.attributes[property];
         record[property] = textToPrint;
       }
-      console.log(record.responses);
 
       // loop over responses
       for await (const response of record.responses) {
         // find the question in questions, if not found, add
         let question = questions.find(question => question.name === response.name);
         if (!question) {
-          console.log(response);
           question = { name: response.name, label: { [language]: response.name } };
           questions.push(question);
         }
@@ -109,8 +111,6 @@ class FileService {
       if (titles[language][field]) return { label: titles[language][field], value: field };
       else return field;
     });
-
-    console.log(columnLabels);
 
     const opts = { fields: columnLabels };
     const csv = parse(payload, opts);
@@ -143,7 +143,6 @@ class FileService {
         reportFiles: [] // has the data for report files
       }
     };
-
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -216,7 +215,6 @@ class FileService {
       }
       bundle.reports.push(newRecord);
     }
-
     archive.append(JSON.stringify(bundle), { name: "bundle.json" });
     archive.finalize();
 

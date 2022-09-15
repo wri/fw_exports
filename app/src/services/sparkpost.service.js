@@ -6,7 +6,6 @@ const sparky = new SparkPost(config.get('sparkpost.apiKey'));
 class SparkpostService {
     static async sendMail(email, url) {
         
-        console.log(config.get('sparkpost.apiKey'));
         
         sparky.transmissions
             .send({
@@ -19,8 +18,6 @@ class SparkpostService {
                 },
                 recipients: [{ address: email }]
             })
-            .then(data => console.log(data, email))
-
     }
 }
 
