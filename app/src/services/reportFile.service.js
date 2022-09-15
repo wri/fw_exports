@@ -291,7 +291,7 @@ class FileService {
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
         const contents = myWritableStreamBuffer.getContents();
-        resolve(contents);
+        resolve(newshpfile);
       });
       myWritableStreamBuffer.on("error", reject);
     });
@@ -411,7 +411,6 @@ class FileService {
         initialSize: 100 * 1024, // start at 100 kilobytes.
         incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
       });
-      console.log(record);
       const doc = new PDFDocument({ size: "A4" });
       doc.pipe(docStreamBuffer);
 
