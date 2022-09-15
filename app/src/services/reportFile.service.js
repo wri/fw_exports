@@ -35,7 +35,7 @@ class FileService {
 
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 100 * 1024 // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
