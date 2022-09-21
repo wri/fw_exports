@@ -18,9 +18,6 @@ const allowedFields = [
   "areaOfInterestName",
   "language",
   "userPosition",
-  "startDate",
-  "endDate",
-  "layer",
   "user",
   "createdAt",
   "clickedPosition"
