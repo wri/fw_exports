@@ -6,17 +6,33 @@ const streamBuffers = require("stream-buffers");
 const PDFDocument = require("pdfkit");
 const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
+import logger from "../logger";
 
-const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition"];
+const allowedFields = [
+  "reportName",
+  "report",
+  "templateName",
+  "fullName",
+  "teamId",
+  "areaOfInterest",
+  "areaOfInterestName",
+  "language",
+  "userPosition",
+  "user",
+  "createdAt",
+  "clickedPosition"
+];
 
 class FileService {
   static async createCsv(payload, fields, templates, language) {
     // fields is an array of accepted fields
     // payload is an array of objects
 
+    logger.info(`Exporting ${payload.length} reports`);
+
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 100 * 1024 // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -29,14 +45,18 @@ class FileService {
     // create array of questions. There will be lots of questions depending on the number of templates.
     let questions = [];
     templates.forEach(template => {
-      questions.push(...template.attributes.questions);
+      template.attributes.questions.forEach(question => {
+        questions.push(question);
+        if (question.childQuestions && question.childQuestions.length > 0) questions.push(...question.childQuestions);
+      });
     });
 
     // flatten object
     for await (const record of payload) {
+      logger.info(`Exporting ${record.attributes.reportName}`);
       for (const property in record.attributes) {
         let textToPrint = "";
-        if (Array.isArray(record.attributes[property])) {
+        if (Array.isArray(record.attributes[property]) && property !== "responses") {
           // if it's coordinates
           if (typeof record.attributes[property][0] === "object") {
             // if it's an array of objects ({lon: number, lat: number})
@@ -59,17 +79,17 @@ class FileService {
         record[property] = textToPrint;
       }
 
-      if (fields.includes("responses")) {
-        // loop over responses
-        for await (const response of record.responses) {
-          // find the question in questions, if not found, add
-          let question = questions.find(question => question.name === response.name);
-          if (!question) {
-            question = { name: response.name, label: { [language]: response.name } };
-            questions.push(question);
-          }
-          // check if the answer is an image
-          if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
+      // loop over responses
+      for await (const response of record.responses) {
+        // find the question in questions, if not found, add
+        let question = questions.find(question => question.name === response.name);
+        if (!question) {
+          question = { name: response.name, label: { [language]: response.name } };
+          questions.push(question);
+        }
+        // check if the answer is an image
+        if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
+          if (payload.length < 20) {
             // download the image
             const image = await axios({
               url: response.value,
@@ -82,28 +102,31 @@ class FileService {
             // add the path to the csv file
             record[question.label[language]] = imagePath;
           } else record[question.label[language]] = response.value;
-        }
+        } else record[question.label[language]] = response.value;
       }
     }
 
-    // remove "questions" from
-    if (fields.includes("responses")) {
-      fields.splice(fields.indexOf("responses"), 1);
-      fields.push(...questions.map(question => question.label[language]));
-    }
+    fields.splice(fields.indexOf("responses"), 1);
+    fields.push(...questions.map(question => question.label[language]));
 
     const columnLabels = fields.map(field => {
       if (titles[language][field]) return { label: titles[language][field], value: field };
+      else if (titles.en[field]) return { label: titles.en[field], value: field };
       else return field;
     });
+
+    logger.info("Finished exporting");
 
     const opts = { fields: columnLabels };
     const csv = parse(payload, opts);
     archive.append(csv, { name: "reportAnswers.csv" });
     archive.finalize();
 
+    logger.info("CSV finalised");
+
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
+        logger.info("Finished buffering");
         const contents = myWritableStreamBuffer.getContents();
         resolve(contents);
       });
@@ -128,7 +151,6 @@ class FileService {
         reportFiles: [] // has the data for report files
       }
     };
-
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -170,24 +192,26 @@ class FileService {
         };
         // check if the answer is an image
         if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-          // download the image
-          const image = await axios({
-            url: response.value,
-            responseType: "stream",
-            responseEncoding: "utf-8"
-          });
-          // save it to the directory - directory name should be name of report/name of question
-          const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
-          archive.append(image.data, { name: imagePath });
-          answer.value = "image/jpeg";
-          // create record in manifest.reportFiles
-          bundle.manifest.reportFiles.push({
-            reportName: newRecord.reportName,
-            questionName: answer.questionName,
-            size: image.headers["content-length"],
-            path: imagePath,
-            type: "image/jpeg"
-          });
+          if (payload.length < 20) {
+            // download the image
+            const image = await axios({
+              url: response.value,
+              responseType: "stream",
+              responseEncoding: "utf-8"
+            });
+            // save it to the directory - directory name should be name of report/name of question
+            const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
+            archive.append(image.data, { name: imagePath });
+            answer.value = "image/jpeg";
+            // create record in manifest.reportFiles
+            bundle.manifest.reportFiles.push({
+              reportName: newRecord.reportName,
+              questionName: answer.questionName,
+              size: image.headers["content-length"],
+              path: imagePath,
+              type: "image/jpeg"
+            });
+          }
         }
         // check if the answer is a child
         // find an existing answer's question name inside this answer's question name
@@ -201,7 +225,6 @@ class FileService {
       }
       bundle.reports.push(newRecord);
     }
-
     archive.append(JSON.stringify(bundle), { name: "bundle.json" });
     archive.finalize();
 
@@ -274,7 +297,7 @@ class FileService {
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
         const contents = myWritableStreamBuffer.getContents();
-        resolve(contents);
+        resolve(newshpfile);
       });
       myWritableStreamBuffer.on("error", reject);
     });
@@ -356,46 +379,62 @@ class FileService {
     images.createdAt = await axios.get("https://cdn-icons-png.flaticon.com/512/747/747310.png", {
       responseType: "arraybuffer"
     });
-    images.layer = await axios.get("https://cdn-icons-png.flaticon.com/512/126/126307.png", {
+    images.layer = await axios.get("https://cdn-icons-png.flaticon.com/512/497/497789.png", {
       responseType: "arraybuffer"
     });
     images.clickedPosition = await axios.get("https://cdn-icons-png.flaticon.com/512/70/70699.png", {
       responseType: "arraybuffer"
     });
+    images.areaOfInterest = await axios.get("https://cdn-icons-png.flaticon.com/512/3381/3381635.png", {
+      responseType: "arraybuffer"
+    });
+    images.language = await axios.get("https://cdn-icons-png.flaticon.com/512/484/484633.png", {
+      responseType: "arraybuffer"
+    });
+    images.templateName = await axios.get("https://cdn-icons-png.flaticon.com/512/2991/2991112.png", {
+      responseType: "arraybuffer"
+    });
+    images.report = images.areaOfInterest;
+    images.user = images.areaOfInterest;
+    images.teamId = images.user;
+    images.startDate = images.createdAt;
+    images.endDate = images.startDate;
     images.userPosition = images.clickedPosition;
 
     // create array of questions. There will be lots of questions depending on the number of templates.
     let questions = [];
     templates.forEach(template => {
-      questions.push(...template.attributes.questions);
+      template.attributes.questions.forEach(question => {
+        questions.push(question);
+        if (question.childQuestions && question.childQuestions.length > 0) questions.push(...question.childQuestions);
+      });
     });
 
     // sanitise fields
-    const filteredFields = allowedFields.filter(value => fields.includes(value));
-
-    console.log(filteredFields);
-    console.log(payload);
+    const filteredFields = allowedFields.filter(value => {
+      return fields.includes(value) && value !== "clickedPosition" && value !== "reportName";
+    });
 
     for await (const record of payload) {
       var docStreamBuffer = new streamBuffers.WritableStreamBuffer({
         initialSize: 100 * 1024, // start at 100 kilobytes.
         incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
       });
-
       const doc = new PDFDocument({ size: "A4" });
       doc.pipe(docStreamBuffer);
 
-      doc.fontSize(15).text("Monitoring Report", 50, 80);
-      doc.font("Helvetica-Bold").fontSize(15).text(record.attributes.reportName.toUpperCase(), 50, 105);
+      doc.fontSize(14).text("Monitoring Report", 50, 80);
+      doc.font("Helvetica-Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
 
       filteredFields.forEach((field, i) => {
         doc.image(images[field].data, 50 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50, { fit: [20, 20] });
         let fieldName = "";
         if (titles[language][field]) fieldName = titles[language][field];
+        else if (titles.en[field]) fieldName = titles.en[field];
         else fieldName = field;
         doc
           .font("Helvetica")
-          .fontSize(12)
+          .fontSize(11)
           .text(fieldName.toUpperCase(), 80 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50);
         let textToPrint = "";
         if (Array.isArray(record.attributes[field])) {
@@ -405,26 +444,33 @@ class FileService {
             if (record.attributes[field].length > 1) {
               textToPrint = "MULTIPOINT (";
               record.attributes[field].forEach(point => {
-                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+                textToPrint =
+                  textToPrint + `(${point.lon.toString().substring(0, 9)} ${point.lat.toString().substring(0, 9)}), `;
               });
               textToPrint.slice(0, -1);
               textToPrint.slice(0, -1);
               textToPrint = textToPrint + ")";
             } else {
-              textToPrint = `POINT (${record.attributes[field][0].lon} ${record.attributes[field][0].lat})`;
+              textToPrint = `POINT (${record.attributes[field][0].lon.toString().substring(0, 9)} ${record.attributes[
+                field
+              ][0].lat
+                .toString()
+                .substring(0, 9)})`;
             }
           } else {
             // if it's an array of coordinates
-            textToPrint = `POINT (${record.attributes[field][0]} ${record.attributes[field][1]})`;
+            textToPrint = `POINT (${record.attributes[field][0].toString().substring(0, 9)} ${record.attributes[
+              field
+            ][1]
+              .toString()
+              .substring(0, 9)})`;
           }
         } else textToPrint = record.attributes[field];
-        doc.fontSize(15).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
+        doc.fontSize(13).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
       });
-
-      const lineY = 50 + 50 * (filteredFields.length + (filteredFields.length % 2) / 2);
-
-      doc.moveTo(50, lineY).lineTo(500, lineY).stroke();
-
+      doc.moveDown(1);
+      doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
+      doc.moveDown(1);
       // loop over responses
       record.attributes.responses.forEach((response, i) => {
         let responseToShow = "";
@@ -439,25 +485,18 @@ class FileService {
           responseToShow = `Picture found at: ${response.value}`;
         } else responseToShow = response.value;
 
-        doc
-          .font("Helvetica-Bold")
-          .fontSize(12)
-          .text(question.label[language], 50, lineY + 15 + 50 * i);
-        doc
-          .font("Helvetica")
-          .fontSize(12)
-          .text(responseToShow, 50, lineY + 30 + 50 * i);
+        doc.font("Helvetica-Bold").fontSize(11).text(question.label[language], 50); //, lineY + 15 + 50 * i);
+        doc.moveDown(0.5);
+        doc.font("Helvetica").fontSize(11).text(responseToShow, 50); //, lineY + 30 + 50 * i);
+        doc.moveDown(1);
       });
 
       if (fields.includes("clickedPosition")) {
-        doc.image(images.clickedPosition.data, 50, 270 + 50 * record.attributes.responses.length, { fit: [20, 20] });
+        //doc.image(images.clickedPosition.data, 50, doc.y, { fit: [20, 20] }); //, 270 + 50 * record.attributes.responses.length, { fit: [20, 20] });
         let fieldName = "";
         if (titles[language].clickedPosition) fieldName = titles[language].clickedPosition;
         else fieldName = "Clicked Position";
-        doc
-          .font("Helvetica")
-          .fontSize(12)
-          .text(fieldName.toUpperCase(), 80, 270 + 50 * record.attributes.responses.length);
+        doc.font("Helvetica").fontSize(11).text(fieldName.toUpperCase(), 50, doc.y); //, 270 + 50 * record.attributes.responses.length);
         let textToPrint = "";
         if (Array.isArray(record.attributes.clickedPosition)) {
           // if it's coordinates
@@ -466,20 +505,21 @@ class FileService {
             if (record.attributes.clickedPosition.length > 1) {
               textToPrint = "MULTIPOINT (";
               record.attributes.clickedPosition.forEach(point => {
-                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
+                textToPrint = textToPrint + `(${point.lat} ${point.lon}), `;
               });
               textToPrint.slice(0, -1);
               textToPrint.slice(0, -1);
               textToPrint = textToPrint + ")";
             } else {
-              textToPrint = `POINT (${record.attributes.clickedPosition[0].lon} ${record.attributes.clickedPosition[0].lat})`;
+              textToPrint = `POINT (${record.attributes.clickedPosition[0].lat} ${record.attributes.clickedPosition[0].lon})`;
             }
           } else {
             // if it's an array of coordinates
             textToPrint = `POINT (${record.attributes.clickedPosition[0]} ${record.attributes.clickedPosition[1]})`;
           }
         } else textToPrint = record.attributes.clickedPosition;
-        doc.fontSize(15).text(textToPrint, 80, 290 + 50 * record.attributes.responses.length);
+        doc.moveDown(0.5);
+        doc.fontSize(14).text(textToPrint, 50, doc.y); //, 290 + 50 * record.attributes.responses.length);
       }
 
       doc.end();
@@ -516,7 +556,16 @@ const titles = {
     language: "Language",
     userPosition: "User Position",
     reportedPosition: "Reported Position",
-    layer: "Alert"
+    layer: "Alert",
+    reportName: "Report Name",
+    report: "Template ID",
+    templateName: "Template Name",
+    teamId: "Team ID",
+    areaOfInterest: "Area ID",
+    startDate: "Start Date",
+    endDate: "End Date",
+    user: "Monitor ID",
+    clickedPosition: "Reported Position"
   },
 
   es: {
@@ -526,6 +575,7 @@ const titles = {
     language: "Idioma",
     userPosition: "Posición del usuario",
     reportedPosition: "Posición del reporte",
+    clickedPosition: "Posición del reporte",
     layer: "Alerta"
   },
 
@@ -536,6 +586,7 @@ const titles = {
     language: "Langue",
     userPosition: "Position de l'utilisateur",
     reportedPosition: "Position signalée",
+    clickedPosition: "Position signalée",
     layer: "Alerte"
   },
 
@@ -546,6 +597,7 @@ const titles = {
     language: "Bahasa",
     userPosition: "Posisi Pengguna",
     reportedPosition: "Posisi Terlapor",
+    clickedPosition: "Posisi Terlapor",
     layer: "Peringatan"
   },
 
@@ -556,6 +608,7 @@ const titles = {
     language: "Bahasa",
     userPosition: "Posisi Pengguna",
     reportedPosition: "Posisi Terlapor",
+    clickedPosition: "Posisi Terlapor",
     layer: "Peringatan"
   },
 
@@ -566,6 +619,7 @@ const titles = {
     language: "Taal",
     userPosition: "Gebruikers locatie",
     reportedPosition: "Gerapporteerde locatie",
+    clickedPosition: "Gerapporteerde locatie",
     layer: "Waarschuwing"
   },
 
@@ -576,6 +630,7 @@ const titles = {
     language: "Língua",
     userPosition: "Posição do usuário",
     reportedPosition: "Localização reportada",
+    clickedPosition: "Localização reportada",
     layer: "Alerta"
   }
 };

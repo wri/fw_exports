@@ -2,11 +2,12 @@
 import config from "config";
 const SparkPost = require("sparkpost");
 const sparky = new SparkPost(config.get('sparkpost.apiKey'));
+import logger from "../logger";
 
 class SparkpostService {
     static async sendMail(email, url) {
         
-        console.log(config.get('sparkpost.apiKey'));
+        logger.info(`Sending email to ${email}`)
         
         sparky.transmissions
             .send({
@@ -19,8 +20,6 @@ class SparkpostService {
                 },
                 recipients: [{ address: email }]
             })
-            .then(data => console.log(data, email))
-
     }
 }
 

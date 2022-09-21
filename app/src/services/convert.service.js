@@ -2,7 +2,7 @@
 import logger from "../logger";
 import axios from "axios";
 import querystring from "querystring";
-import admZip from "adm-zip";
+//import admZip from "adm-zip";
 
 class ConvertService {
   static async geojsonToShp(geojson) {
@@ -15,19 +15,14 @@ class ConvertService {
       );
       const shp = response.data;
 
-      // unzip and rezip?
-      const zip = new admZip(shp);
+/*       // unzip and rezip?
       const rezip = new admZip();
-      const zipEntries = zip.getEntries();
-      console.log("******ZIP ENTRIES ******", zipEntries.length);
-      zipEntries.forEach(entry => {
-        rezip.addFile(entry.entryName, entry.getData())
-      });
+      rezip.addFile("other.shz", shp)
 
       const shpToWrite = rezip.toBuffer();
 
-      logger.info("Got shapefile");
-      return shpToWrite;
+      logger.info("Got shapefile"); */
+      return shp;
     } catch (e) {
       logger.error("Error while converting shapefile", e);
     }

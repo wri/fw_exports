@@ -6,7 +6,6 @@ auto_scaling_min_capacity = 1
 auto_scaling_max_capacity = 15
 
 auth_url         = "https://staging-api.resourcewatch.org"
-forms_api_url    = "https://staging-api.resourcewatch.org/v1"
 alerts_api_url   = "https://staging-data-api.globalforestwatch.org"
 geostore_api_url          = "https://staging-api.resourcewatch.org/v1"
 s3_bucket                 = "forest-watcher-files"

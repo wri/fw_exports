@@ -6,8 +6,6 @@ const { parse } = require("json2csv");
 //const shpwrite = require("shp-write");
 const GeostoreService = require("./geostore.service");
 
-const allowedFields = ["createdAt", "fullName", "areaOfInterestName", "layer", "userPosition", "clickedPosition"];
-
 class FileService {
   static async createBundle(payload) {
     // create a fwbundle
@@ -89,7 +87,7 @@ class FileService {
     });
   }
 
-  static async createGeojson(payload, fields = []) {
+  static async createGeojson(payload) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -116,18 +114,18 @@ class FileService {
         geojson = geojsonResponse.geojson;
         geojson.features.forEach(feature => {
           feature.properties = {
-            id: record.id
+            id: record.id,
+            ...record.attributes
           };
-          fields.forEach(field => (feature.properties[field] = record.attributes[field]));
           geojsonFile.features.push(feature);
         });
       } else if (record.attributes.geostore.geojson) {
         geojson = record.attributes.geostore.geojson;
         geojson.features.forEach(feature => {
           feature.properties = {
-            id: record.id
+            id: record.id,
+            ...record.attributes
           };
-          fields.forEach(field => (feature.properties[field] = record.attributes[field]));
           geojsonFile.features.push(feature);
         });
       }
@@ -144,7 +142,7 @@ class FileService {
     });
   }
 
-  static async createCsv(payload, fields) {
+  static async createCsv(payload) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -157,18 +155,40 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
     let areas = [];
+    let fields = [
+      "id",
+      "name",
+      "application",
+      "geostore",
+      "userId",
+      "createdAt",
+      "updatedAt",
+      "image",
+      "datasets",
+      "use",
+      "env",
+      "iso",
+      "admin",
+      "templateId",
+      "tags",
+      "status",
+      "public",
+      "fireAlerts",
+      "deforestationAlerts",
+      "webhookUrl",
+      "monthlySummary",
+      "subscriptionId",
+      "email",
+      "language",
+      "confirmed"
+    ];
     // loop over records
     for await (const record of payload) {
       let row = {
         id: record.id,
-        name: record.attributes.name,
-        createdAt: record.attributes.createdAt,
-        image: record.attributes.image
+        ...record.attributes
       };
 
-      fields.forEach(field => {
-        if (record.attributes[field]) row[field] = record.attributes[field];
-      });
       let geojson;
       if (!record.attributes.geostore.geojson) {
         let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
@@ -198,7 +218,6 @@ class FileService {
       }
       areas.push(row);
     }
-    fields.unshift("id", "name", "createdAt", "image");
     const opts = { fields };
     const csv = parse(areas, opts);
     archive.append(csv, { name: "areas.csv" });
@@ -213,7 +232,7 @@ class FileService {
     });
   }
 
-  static async createShape(payload, fields) {
+  static async createShape(payload) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -264,7 +283,6 @@ class FileService {
     } */
 
     // sanitise fields
-    const filteredFields = allowedFields.filter(value => fields.includes(value));
 
     let shapeArray = {
       type: "FeatureCollection",
@@ -277,11 +295,9 @@ class FileService {
         geojson = geojsonResponse.geojson;
         geojson.features.forEach(feature => {
           feature.properties = {
-            id: record.id.toString()
+            id: record.id.toString(),
+            ...record.attributes
           };
-          filteredFields.forEach(field => {
-            if (record.attributes[field]) feature.properties[field] = record.attributes[field];
-          });
         });
         shapeArray.features.push(...geojson.features);
         //let shpfile = shpwrite.zip(geojson);
@@ -314,8 +330,8 @@ class FileService {
 
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
-        const contents = myWritableStreamBuffer.getContents();
-        resolve(contents);
+        //const contents = myWritableStreamBuffer.getContents();
+        resolve(shpfile);
       });
       myWritableStreamBuffer.on("error", reject);
     });
