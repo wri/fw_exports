@@ -84,10 +84,10 @@ class AnswerRouter {
 
   static async export(ctx) {
     const objId = new ObjectId();
-    ctx.templates.forEach(template => {
+    /*     ctx.templates.forEach(template => {
       if (!template.attributes.languages.includes(ctx.request.body.language))
         ctx.throw(400, "Please enter a valid language for all templates");
-    });
+    }); */
     if (!["csv", "fwbundle", "geojson", "shp", "pdf"].includes(ctx.request.body.fileType))
       ctx.throw(400, "Please enter a valid file type");
 
