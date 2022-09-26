@@ -124,7 +124,6 @@ class FileService {
       }
     }
 
-    fields.splice(fields.indexOf("responses"), 1);
     fields.push(
       ...questions.map(question => question.label[defaultLanguage] || question.label[question.defaultLanguage])
     );
