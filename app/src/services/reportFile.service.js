@@ -20,11 +20,12 @@ const allowedFields = [
   "userPosition",
   "user",
   "createdAt",
-  "clickedPosition"
+  "clickedPosition",
+  "reponses"
 ];
 
 class FileService {
-  static async createCsv(payload, fields, templates, language) {
+  static async createCsv(payload, fields, templates, defaultLanguage) {
     // fields is an array of accepted fields
     // payload is an array of objects
 
@@ -46,13 +47,30 @@ class FileService {
     let questions = [];
     templates.forEach(template => {
       template.attributes.questions.forEach(question => {
-        questions.push(question);
-        if (question.childQuestions && question.childQuestions.length > 0) questions.push(...question.childQuestions);
+        questions.push({
+          ...question,
+          defaultLanguage: template.attributes.defaultLanguage
+        });
+        if (question.childQuestions && question.childQuestions.length > 0)
+          questions.push(
+            ...question.childQuestions.map(cQuestion => {
+              return {
+                ...cQuestion,
+                defaultLanguage: template.attributes.defaultLanguage
+              };
+            })
+          );
       });
     });
 
     // flatten object
     for await (const record of payload) {
+      // check if language is supported
+      let language = "";
+      const template = templates.find(temp => temp.id === record.attributes.report);
+      if (template.attributes.languages.includes(defaultLanguage)) language = defaultLanguage;
+      else language = template.attributes.defaultLanguage;
+
       logger.info(`Exporting ${record.attributes.reportName}`);
       for (const property in record.attributes) {
         let textToPrint = "";
@@ -107,10 +125,12 @@ class FileService {
     }
 
     fields.splice(fields.indexOf("responses"), 1);
-    fields.push(...questions.map(question => question.label[language]));
+    fields.push(
+      ...questions.map(question => question.label[defaultLanguage] || question.label[question.defaultLanguage])
+    );
 
     const columnLabels = fields.map(field => {
-      if (titles[language][field]) return { label: titles[language][field], value: field };
+      if (titles[defaultLanguage][field]) return { label: titles[defaultLanguage][field], value: field };
       else if (titles.en[field]) return { label: titles.en[field], value: field };
       else return field;
     });
@@ -401,21 +421,27 @@ class FileService {
     images.endDate = images.startDate;
     images.userPosition = images.clickedPosition;
 
-    // create array of questions. There will be lots of questions depending on the number of templates.
-    let questions = [];
-    templates.forEach(template => {
-      template.attributes.questions.forEach(question => {
-        questions.push(question);
-        if (question.childQuestions && question.childQuestions.length > 0) questions.push(...question.childQuestions);
-      });
-    });
-
     // sanitise fields
     const filteredFields = allowedFields.filter(value => {
       return fields.includes(value) && value !== "clickedPosition" && value !== "reportName";
     });
 
     for await (const record of payload) {
+      let questions = [];
+      let template = templates.find(temp => temp.id === record.attributes.report);
+      template.attributes.questions.forEach(question => {
+        questions.push({
+          ...question,
+          defaultLanguage: template.attributes.defaultLanguage
+        });
+        if (question.childQuestions && question.childQuestions.length > 0)
+          questions.push(
+            ...question.childQuestions.map(cQuestion => {
+              return { ...cQuestion, defaultLanguage: template.attributes.defaultLanguage };
+            })
+          );
+      });
+
       var docStreamBuffer = new streamBuffers.WritableStreamBuffer({
         initialSize: 100 * 1024, // start at 100 kilobytes.
         incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -485,7 +511,10 @@ class FileService {
           responseToShow = `Picture found at: ${response.value}`;
         } else responseToShow = response.value;
 
-        doc.font("Helvetica-Bold").fontSize(11).text(question.label[language], 50); //, lineY + 15 + 50 * i);
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(11)
+          .text(question.label[language] || question.label[question.defaultLanguage], 50); //, lineY + 15 + 50 * i);
         doc.moveDown(0.5);
         doc.font("Helvetica").fontSize(11).text(responseToShow, 50); //, lineY + 30 + 50 * i);
         doc.moveDown(1);
