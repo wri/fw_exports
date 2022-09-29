@@ -111,20 +111,22 @@ class FileService {
       // pull down geojson info
       if (!record.attributes.geostore.geojson) {
         let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
-        geojson = geojsonResponse.geojson;
+        geojson = { ...geojsonResponse.geojson };
         geojson.features.forEach(feature => {
           feature.properties = {
             id: record.id,
-            ...record.attributes
+            ...record.attributes,
+            geostore: null
           };
           geojsonFile.features.push(feature);
         });
       } else if (record.attributes.geostore.geojson) {
-        geojson = record.attributes.geostore.geojson;
+        geojson = { ...record.attributes.geostore.geojson };
         geojson.features.forEach(feature => {
           feature.properties = {
             id: record.id,
-            ...record.attributes
+            ...record.attributes,
+            geostore: null
           };
           geojsonFile.features.push(feature);
         });
