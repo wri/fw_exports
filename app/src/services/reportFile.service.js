@@ -21,7 +21,8 @@ const allowedFields = [
   "user",
   "createdAt",
   "clickedPosition",
-  "reponses"
+  "reponses",
+  "layer"
 ];
 
 class FileService {
