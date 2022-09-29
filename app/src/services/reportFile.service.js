@@ -291,7 +291,7 @@ class FileService {
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
-          coordinates.push([position.lat, position.lon]);
+          coordinates.push([position.lon, position.lat]);
         });
         shape.geometry = {
           type: "MultiPoint",
@@ -300,7 +300,7 @@ class FileService {
       } else if (record.attributes.clickedPosition && record.attributes.clickedPosition.length === 1) {
         shape.geometry = {
           type: "Point",
-          coordinates: [record.attributes.clickedPosition[0].lat, record.attributes.clickedPosition[0].lon]
+          coordinates: [record.attributes.clickedPosition[0].lon, record.attributes.clickedPosition[0].lat]
         };
       } else continue;
       shapeArray.features.push(shape);
@@ -350,7 +350,7 @@ class FileService {
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
-          coordinates.push([position.lat, position.lon]);
+          coordinates.push([position.lon, position.lat]);
         });
         shape.geometry = {
           type: "MultiPoint",
@@ -359,7 +359,7 @@ class FileService {
       } else {
         shape.geometry = {
           type: "Point",
-          coordinates: [record.attributes.clickedPosition.lat, record.attributes.clickedPosition.lon]
+          coordinates: [record.attributes.clickedPosition.lon, record.attributes.clickedPosition.lat]
         };
       }
       geojson.features.push(shape);
@@ -534,13 +534,13 @@ class FileService {
             if (record.attributes.clickedPosition.length > 1) {
               textToPrint = "MULTIPOINT (";
               record.attributes.clickedPosition.forEach(point => {
-                textToPrint = textToPrint + `(${point.lat} ${point.lon}), `;
+                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
               });
               textToPrint.slice(0, -1);
               textToPrint.slice(0, -1);
               textToPrint = textToPrint + ")";
             } else {
-              textToPrint = `POINT (${record.attributes.clickedPosition[0].lat} ${record.attributes.clickedPosition[0].lon})`;
+              textToPrint = `POINT (${record.attributes.clickedPosition[0].lon} ${record.attributes.clickedPosition[0].lat})`;
             }
           } else {
             // if it's an array of coordinates
