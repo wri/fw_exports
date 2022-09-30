@@ -305,8 +305,8 @@ class FileService {
         };
       } else if (record.attributes.clickedPosition && record.attributes.clickedPosition.length === 1) {
         shape.geometry = {
-          type: "Point",
-          coordinates: [record.attributes.clickedPosition[0].lon, record.attributes.clickedPosition[0].lat]
+          type: "MultiPoint",
+          coordinates: [[record.attributes.clickedPosition[0].lon, record.attributes.clickedPosition[0].lat]]
         };
       } else continue;
       shapeArray.features.push(shape);
