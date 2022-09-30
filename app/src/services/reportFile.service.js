@@ -44,16 +44,17 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-    // create array of questions. There will be lots of questions depending on the number of templates.
-    let questions = [];
+    // create object questions with keys of template ids and values of question arrays. There will be lots of questions depending on the number of templates.
+    let questions = {};
     templates.forEach(template => {
+      if (!questions[template.id]) questions[template.id] = [];
       template.attributes.questions.forEach(question => {
-        questions.push({
+        questions[template.id].push({
           ...question,
           defaultLanguage: template.attributes.defaultLanguage
         });
         if (question.childQuestions && question.childQuestions.length > 0)
-          questions.push(
+          questions[template.id].push(
             ...question.childQuestions.map(cQuestion => {
               return {
                 ...cQuestion,
@@ -101,10 +102,10 @@ class FileService {
       // loop over responses
       for await (const response of record.responses) {
         // find the question in questions, if not found, add
-        let question = questions.find(question => question.name === response.name);
+        let question = questions[record.attributes.report].find(question => question.name === response.name);
         if (!question) {
           question = { name: response.name, label: { [language]: response.name } };
-          questions.push(question);
+          questions[record.attributes.report].push(question);
         }
         // check if the answer is an image
         if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
@@ -125,21 +126,26 @@ class FileService {
       }
     }
 
-    fields.push(
-      ...questions.map(question => question.label[defaultLanguage] || question.label[question.defaultLanguage])
-    );
+    templates.forEach(template => {
+      const templateFields = [...fields];
+      templateFields.push(
+        ...questions[template.id].map(
+          question => question.label[defaultLanguage] || question.label[question.defaultLanguage]
+        )
+      );
 
-    const columnLabels = fields.map(field => {
-      if (titles[defaultLanguage][field]) return { label: titles[defaultLanguage][field], value: field };
-      else if (titles.en[field]) return { label: titles.en[field], value: field };
-      else return field;
+      const columnLabels = templateFields.map(field => {
+        if (titles[defaultLanguage][field]) return { label: titles[defaultLanguage][field], value: field };
+        else if (titles.en[field]) return { label: titles.en[field], value: field };
+        else return field;
+      });
+
+      const templatePayload = payload.filter(answer => answer.attributes.report.toString() === template.id.toString());
+
+      const opts = { fields: columnLabels };
+      const csv = parse(templatePayload, opts);
+      archive.append(csv, { name: `${template.id}answers.csv` });
     });
-
-    logger.info("Finished exporting");
-
-    const opts = { fields: columnLabels };
-    const csv = parse(payload, opts);
-    archive.append(csv, { name: "reportAnswers.csv" });
     archive.finalize();
 
     logger.info("CSV finalised");
