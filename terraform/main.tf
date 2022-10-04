@@ -45,33 +45,56 @@ module "fargate_autoscaling" {
   ]
   task_execution_role_policies = [
     data.terraform_remote_state.core.outputs.document_db_secrets_policy_arn,
+    data.terraform_remote_state.fw_core.outputs.gfw_data_api_key_secret_policy_arn,
+    module.SPARKPOST_API_KEY.read_policy_arn,
   ]
   container_definition = data.template_file.container_definition.rendered
+
+  depends_on = [
+    module.SPARKPOST_API_KEY
+  ]
 
   # Listener rule inputs
   lb_target_group_arn = module.fargate_autoscaling.lb_target_group_arn
   listener_arn        = data.terraform_remote_state.fw_core.outputs.lb_listener_arn
   project_prefix      = var.project_prefix
-  path_pattern        = ["${var.healthcheck_path}", "/v1/exports/ping*"]
+  path_pattern        = ["${var.healthcheck_path}", "/v1/exports*", "/v3/exports*"]
   health_check_path = var.healthcheck_path
   priority = 8
 }
 
-
+module "SPARKPOST_API_KEY" {
+  source        = "git::https://github.com/wri/gfw-terraform-modules.git//terraform/modules/secrets?ref=v0.5.1"
+  project       = var.project_prefix
+  name          = "${var.project_prefix}-SPARKPOST_API_KEY"
+  secret_string = var.SPARKPOST_API_KEY
+}
 
 data "template_file" "container_definition" {
   template = file("${path.root}/templates/container_definition.json.tmpl")
   vars = {
-    environment       = var.environment
-    aws_region        = var.region
-    image = "${module.app_docker_image.repository_url}:${local.container_tag}"
-    container_name = var.project_prefix
-    container_port = var.container_port
-    log_group = aws_cloudwatch_log_group.default.name
-    log_level         = var.log_level
-    db_secret_arn = data.terraform_remote_state.core.outputs.document_db_secrets_arn
-    data_bucket = data.terraform_remote_state.fw_core.outputs.data_bucket
-    redis_endpoint = data.terraform_remote_state.core.outputs.redis_replication_group_primary_endpoint_address
+    environment             = var.environment
+    aws_region              = var.region
+    image                   = "${module.app_docker_image.repository_url}:${local.container_tag}"
+    container_name          = var.project_prefix
+    container_port          = var.container_port
+    log_group               = aws_cloudwatch_log_group.default.name
+    log_level               = var.log_level
+    document_db_endpoint    = data.terraform_remote_state.core.outputs.document_db_endpoint
+    document_db_port        = data.terraform_remote_state.core.outputs.document_db_port
+    db_secret_arn           = data.terraform_remote_state.core.outputs.document_db_secrets_arn
+    data_bucket             = data.terraform_remote_state.fw_core.outputs.data_bucket
+    redis_endpoint          = data.terraform_remote_state.core.outputs.redis_replication_group_primary_endpoint_address
+    gfw_data_api_key        = data.terraform_remote_state.fw_core.outputs.gfw_data_api_key_secret_arn
+    forms_api_url = "https://${data.terraform_remote_state.fw_core.outputs.public_url}"
+    AREAS_API_URL           = "https://${data.terraform_remote_state.fw_core.outputs.public_url}/v3/forest-watcher"
+    ALERTS_API_URL          = var.alerts_api_url
+    auth_url                = var.auth_url
+    geostore_api_url = var.geostore_api_url
+    s3_bucket               = var.s3_bucket
+    s3_access_key_id        = var.s3_access_key_id
+    s3_secret_access_key    = var.s3_secret_access_key
+    SPARKPOST_API_KEY       = module.SPARKPOST_API_KEY.secret_arn
   }
 
 }

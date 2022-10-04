@@ -1,0 +1,303 @@
+openapi: 3.1.0
+x-stoplight:
+  id: b0495601c8e61
+info:
+  title: fw_exports
+  version: '1.0'
+servers:
+  - url: 'https://dev-fw-api.globalforestwatch.org'
+    description: Dev
+  - url: 'https://staging-fw-api.globalforestwatch.org'
+    description: Staging
+  - url: 'https://api.globalforestwatch.org'
+    description: Production
+paths:
+  /v3/exports/reports/exportSome:
+    parameters: []
+    post:
+      summary: Export some reports
+      operationId: post-v3-reports-templateId-exportSome
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+              examples:
+                example-1:
+                  value:
+                    data: string
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: 'Exports a selection of report answers and associated images given its id as either fwbundle or zipped csv. The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required. The response is an id to poll the GET /v3/exports/reports/{id} endpoint is for the URL once the export has completed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      templateid:
+                        type: string
+                      reportid:
+                        type: string
+                language:
+                  type: string
+                fileType:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: string
+                email:
+                  type: string
+            examples:
+              example-1:
+                value:
+                  ids:
+                    - templateid: string
+                      reportid: string
+                  language: string
+                  fileType: string
+                  fields:
+                    - string
+  /v3/exports/reports/exportAll:
+    parameters: []
+    post:
+      summary: Export all reports
+      operationId: post-v3-reports-templateId-exportAll
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: 'Exports all report answers and associated images available to the user for the given template as either fwbundle or zipped csv.The "fields" array in the body determines the columns in any csv export. Include "responses" if questions and answers are required. The response is an id to poll the GET /v3/exports/reports/{id} endpoint is for the URL once the export has completed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                fileType:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    type: string
+                email:
+                  type: string
+        description: ''
+  '/v3/exports/reports/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: ''
+      operationId: get-v3-exports-reports-id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      description: Returns the url for a given id token received from a reports export request
+  '/v3/exports/areas/exportOne/{areaId}':
+    parameters:
+      - schema:
+          type: string
+        name: areaId
+        in: path
+        required: true
+    post:
+      summary: Export one area
+      operationId: post-v3-areas-exportOne-areaId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+              examples:
+                example-1:
+                  value:
+                    data: string
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: 'Exports an and associated images given its id as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
+      requestBody:
+        $ref: '#/components/requestBodies/Export-areas-request'
+  /v3/exports/areas/exportAll:
+    parameters: []
+    post:
+      summary: Export all areas
+      operationId: post-v3-areas-exportAll
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+      description: 'Exports all areas and associated images available to the user as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
+      requestBody:
+        $ref: '#/components/requestBodies/Export-areas-request'
+  '/v3/exports/areas/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: ''
+      operationId: get-v3-exports-areas-id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      description: Returns the url for a given id token received from an areas export request
+components:
+  schemas: {}
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+  responses:
+    Error:
+      description: Error Response
+      content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            properties:
+              errors:
+                type: array
+                uniqueItems: true
+                minItems: 1
+                items:
+                  required:
+                    - status
+                    - detail
+                  properties:
+                    status:
+                      type: number
+                    detail:
+                      type: string
+                      minLength: 1
+            required:
+              - errors
+          examples: {}
+    Healthcheck:
+      description: Healthcheck response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              uptime:
+                type: number
+          examples: {}
+  requestBodies:
+    Export-areas-request:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileType:
+                type: string
+              fields:
+                type: array
+                items:
+                  type: string
+              email:
+                type: string
+    Export-answers-request:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileType:
+                type: string
+              fields:
+                type: array
+                items:
+                  type: string
+              language:
+                type: string
+              ids:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    templateId:
+                      type: string
+                    reportId:
+                      type: string
+              email:
+                type: string
+            required:
+              - ids
+security:
+  - Authorization: []

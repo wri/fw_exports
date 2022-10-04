@@ -5,5 +5,15 @@
   "logger": {
     "name": "fw-logger",
     "level": "debug"
+  },
+  "mongodb": {
+    "host": "MONGODB_HOST",
+    "port": "MONGODB_PORT",
+    "database": "exports"
+  },
+  "s3":{
+    "region": "us-east-1",
+    "folder": "exports",
+    "bucket": "forest-watcher-files"
   }
 }
