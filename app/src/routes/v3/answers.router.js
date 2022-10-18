@@ -15,6 +15,7 @@ const BucketURLModel = require("../../models/bucketURL.model");
 const { ObjectId } = require("mongoose").Types;
 const SparkpostService = require("../../services/sparkpost.service");
 const AdmZip = require("adm-zip");
+const axios = require('axios');
 
 const router = new Router({
   prefix: "/exports/reports"
@@ -105,6 +106,90 @@ class AnswerRouter {
     ctx.body = { data: objId };
     ctx.status = 200;
   }
+
+  /**
+   * 
+   * @param {import("koa").Context & {params: {id?: string}, body: {fileType?: string}}} ctx 
+   */
+  static async exportImages(ctx) {
+    const answerId = ctx.params.id;
+    if (answerId === undefined) {
+      ctx.throw(400, 'Answer id is required');
+    }
+    
+    const fileType = ctx.body.fileType;
+    if (!['zip', 'pdf'].includes(fileType)) {
+      ctx.throw(400, 'File type must be pdf or zip');
+    }
+
+    const [answer] = await AnswerService.getAnswer({
+      reportid: answerId, 
+      templateid: undefined
+    });
+    if (!answer) {
+      ctx.throw(404, 'Report not found');
+    }
+
+    const templateId = answer.report;
+    const template = await AnswerService.getTemplate(templateId);
+
+    // Flatten the array of questions so questions and child questions are at the same nesting and get their type
+    const flatQuestionTypes = template.questions
+      .reduce((acc, question) => {
+        return [
+          ...acc, 
+          question.type, 
+          ...question.childQuestions.map(q => q.type)
+        ];
+      }, []);
+
+    const isImageType = type => type === 'blob';
+    const imageResponses = flatQuestionTypes
+      .reduce((acc, type, i) => {
+        if (isImageType(type)) {
+          return [...acc, i];
+        }
+        return acc;
+      }, [])
+      .map(i => answer.responses[i]);
+
+    const imageBufferPromises = imageResponses.map(
+      res => axios.get(res.value, {
+        responseType: 'arraybuffer'
+      })
+    );
+    const imageBuffers = await Promise.all(imageBufferPromises);
+
+    let exportBuffer;
+    if (fileType === 'zip') {
+      const imagesArchiveInput = imageBuffers.map((buffer, i) => ({
+        data: buffer,
+        name: 'img-'+ i
+      }));
+      exportBuffer =  FileService.createArchive(imagesArchiveInput);
+    }
+    
+    if (fileType === 'pdf') {
+      const imagesPdfInput = imageBuffers.map(buffer => ({
+        data: buffer
+      }));
+      exportBuffer = FileService.createImagesPDF(answer.name, imagesPdfInput);      
+    }
+
+    const id = new ObjectId(); 
+    
+    createShareableLink({
+      extension: `.${fileType}`,
+      body: exportBuffer,
+    }).then(URL => {
+      const URLModel = new BucketURLModel({ id: id, URL: URL });
+      URLModel.save();
+    });
+
+
+    ctx.body = {data: id};
+    ctx.status = 200;
+  }
 }
 
 const getAnswerSet = async (ctx, next) => {
@@ -161,5 +246,6 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 router.get("/:id", isAuthenticatedMiddleware, AnswerRouter.getUrl);
 router.post("/exportSome", isAuthenticatedMiddleware, getAnswerSet, getTemplates, AnswerRouter.export);
 router.post("/exportAll", isAuthenticatedMiddleware, getAllAnswers, getTemplates, AnswerRouter.export);
+router.post("/:id/images", isAuthenticatedMiddleware, AnswerRouter.exportImages);
 
 export default router;
