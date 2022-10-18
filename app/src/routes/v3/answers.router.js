@@ -7,8 +7,9 @@
 
 const logger = require("logger").default;
 const Router = require("koa-router");
-const AnswerService = require("../../services/answers.service");
-const FileService = require("../../services/reportFile.service");
+const {AnswerService} = require("../../services/answers.service");
+const ReportFileService = require("../../services/reportFile.service");
+const {FileService} = require('../../services/file.service');
 import createShareableLink from "services/s3.service";
 const BucketURLModel = require("../../models/bucketURL.model");
 const { ObjectId } = require("mongoose").Types;
@@ -26,19 +27,19 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
     // create file
     switch (fileType) {
       case "geojson":
-        file = await FileService.createGeojson(payload);
+        file = await ReportFileService.createGeojson(payload);
         break;
       case "shp":
-        file = await FileService.createShape(payload, fields);
+        file = await ReportFileService.createShape(payload, fields);
         break;
       case "csv":
-        file = await FileService.createCsv(payload, fields, templates, language);
+        file = await ReportFileService.createCsv(payload, fields, templates, language);
         break;
       case "fwbundle":
-        file = await FileService.createBundle(payload, templates);
+        file = await ReportFileService.createBundle(payload, templates);
         break;
       case "pdf":
-        file = await FileService.createPDF(payload, templates, fields, language);
+        file = await ReportFileService.createPDF(payload, templates, fields, language);
         break;
       default:
         break;

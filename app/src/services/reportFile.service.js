@@ -25,7 +25,7 @@ const allowedFields = [
   "layer"
 ];
 
-class FileService {
+class ReportFileService {
   static async createCsv(payload, fields, templates, defaultLanguage) {
     // fields is an array of accepted fields
     // payload is an array of objects
@@ -581,7 +581,7 @@ class FileService {
   }
 }
 
-module.exports = FileService;
+module.exports = ReportFileService;
 
 const titles = {
   en: {
