@@ -152,10 +152,11 @@ class AnswerRouter {
 
     const imageBufferPromises = imageResponses
       .filter(res => res.value !== null)
-      .map(res => {
-        return axios.get(res.value, {
+      .map(async res => {
+        const response = await axios.get(res.value, {
           responseType: "arraybuffer"
         });
+        return response.data;
       });
     const imageBuffers = await Promise.all(imageBufferPromises);
 
@@ -165,14 +166,14 @@ class AnswerRouter {
         data: buffer,
         name: "img-" + i
       }));
-      exportBuffer = FileService.createArchive(imagesArchiveInput);
+      exportBuffer = await FileService.createArchive(imagesArchiveInput);
     }
 
     if (fileType === "pdf") {
       const imagesPdfInput = imageBuffers.map(buffer => ({
         data: buffer
       }));
-      exportBuffer = FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
+      exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
     }
 
     const id = new ObjectId();
