@@ -35,7 +35,7 @@ export class FileService {
   /**
    * Creates a pdf of images
    * @param {String} documentName Name of the output document
-   * @param {{data: String | Buffer, fit?: [width, height]}[]} images A list of images with any fitting parameters for size
+   * @param {{data: Buffer, fit?: [width, height]}[]} images A list of images with any fitting parameters for size
    * @returns {Promise<Buffer>} A buffer of the pdf data
    * @throws Any errors that arise while creating a PDF document
    */
@@ -45,7 +45,7 @@ export class FileService {
 
     doc.pipe(writeStreamBuffer);
 
-    for (const image in images) {
+    for (const image of images) {
       doc.image(image.data, { fit: [100, 100] });
     }
 
