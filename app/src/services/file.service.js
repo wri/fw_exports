@@ -6,7 +6,7 @@ export class FileService {
   /**
    * Creates an archive of given files
    * @param {{data: (String | Buffer | Stream), name: String}[]} sources A list of files that will go into the archive
-   * @returns {Buffer} A buffer which contains the archive data
+   * @returns {Promise<Buffer>} A buffer which contains the archive data
    * @throws Any errors thrown by failure to archive
    */
   static async createArchive(sources) {
@@ -36,7 +36,7 @@ export class FileService {
    * Creates a pdf of images
    * @param {String} documentName Name of the output document
    * @param {{data: String | Buffer, fit?: [width, height]}[]} images A list of images with any fitting parameters for size
-   * @returns {Buffer} A buffer of the pdf data
+   * @returns {Promise<Buffer>} A buffer of the pdf data
    * @throws Any errors that arise while creating a PDF document
    */
   static async createImagesPDF(documentName, images) {
