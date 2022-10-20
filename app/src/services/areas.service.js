@@ -10,7 +10,7 @@ class AreaService {
       const baseURL = config.get("areasAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/area/${areaId}`,
+        url: `/areas/${areaId}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -30,7 +30,7 @@ class AreaService {
       const baseURL = config.get("areasAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/area/teams`,
+        url: `/areas/userAndTeams`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token

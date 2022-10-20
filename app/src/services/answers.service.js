@@ -10,7 +10,7 @@ class AnswerService {
       const baseURL = config.get("formsAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/v3/reports/export/${id}`,
+        url: `/v3/gfw/templates/${id}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -32,7 +32,7 @@ class AnswerService {
       const baseURL = config.get("formsAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/v3/reports/${templateid}/answers/export/${reportid}`,
+        url: `/v3/gfw/templates/${templateid}/answers/${reportid}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -53,7 +53,7 @@ class AnswerService {
       const baseURL = config.get("formsAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/v3/reports/getAllAnswersForUser`,
+        url: `/v3/templates/getAllAnswersForUser`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token

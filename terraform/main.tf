@@ -86,11 +86,11 @@ data "template_file" "container_definition" {
     data_bucket             = data.terraform_remote_state.fw_core.outputs.data_bucket
     redis_endpoint          = data.terraform_remote_state.core.outputs.redis_replication_group_primary_endpoint_address
     gfw_data_api_key        = data.terraform_remote_state.fw_core.outputs.gfw_data_api_key_secret_arn
-    forms_api_url = "https://${data.terraform_remote_state.fw_core.outputs.public_url}"
-    AREAS_API_URL           = "https://${data.terraform_remote_state.fw_core.outputs.public_url}/v3/forest-watcher"
+    forms_api_url           = "https://${data.terraform_remote_state.fw_core.outputs.public_url}"
+    AREAS_API_URL           = "https://${data.terraform_remote_state.fw_core.outputs.public_url}/v3/gfw"
     ALERTS_API_URL          = var.alerts_api_url
     auth_url                = var.auth_url
-    geostore_api_url = var.geostore_api_url
+    geostore_api_url        = var.geostore_api_url
     s3_bucket               = var.s3_bucket
     s3_access_key_id        = var.s3_access_key_id
     s3_secret_access_key    = var.s3_secret_access_key
