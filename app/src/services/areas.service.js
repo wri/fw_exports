@@ -7,7 +7,7 @@ class AreaService {
   static async getArea(areaId) {
     logger.info(`Getting area with id ${areaId}`);
     try {
-      const baseURL = config.get("areasAPI.url");
+      const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
         url: `/areas/${areaId}`,
@@ -27,7 +27,7 @@ class AreaService {
   static async getAreas() {
     logger.info(`Getting areas`);
     try {
-      const baseURL = config.get("areasAPI.url");
+      const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
         url: `/areas/userAndTeam`,

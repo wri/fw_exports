@@ -7,10 +7,10 @@ class AnswerService {
   static async getTemplate(id) {
     logger.info(`Getting template with id ${id}`);
     try {
-      const baseURL = config.get("formsAPI.url");
+      const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/v3/gfw/templates/${id}`,
+        url: `/templates/${id}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -29,10 +29,10 @@ class AnswerService {
     const { templateid, reportid } = params;
     logger.info(`Getting answer with id ${reportid} of template id ${templateid}`);
     try {
-      const baseURL = config.get("formsAPI.url");
+      const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/v3/gfw/templates/${templateid}/answers/${reportid}`,
+        url: `/templates/${templateid}/answers/${reportid}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -50,10 +50,10 @@ class AnswerService {
   static async getAllAnswers() {
     logger.info(`Getting all answers`);
     try {
-      const baseURL = config.get("formsAPI.url");
+      const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/v3/templates/getAllAnswersForUser`,
+        url: `/templates/getAllAnswersForUser`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
