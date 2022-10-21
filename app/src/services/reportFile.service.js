@@ -228,8 +228,8 @@ class FileService {
               responseEncoding: "utf-8"
             });
             // get the file extension
-            const splitString = response.value.split(".");
-            const [extension] = splitString.slice(-1);
+            const fileName = response.value;
+            const [fileExtension] = fileName.split(".").slice(-1);
             // save it to the directory - directory name should be name of report/name of question
             const filePath = `${record.attributes.reportName}/${response.name}/attachment.${extension}`;
             archive.append(file.data, { name: filePath });
