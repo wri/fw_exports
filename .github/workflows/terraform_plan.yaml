@@ -47,7 +47,7 @@ jobs:
         EXPORTS_S3_ACCESS_KEY_ID: ${{ secrets.exports_s3_access_key_id }}
         EXPORTS_S3_SECRET_ACCESS_KEY: ${{ secrets.exports_s3_secret_access_key }}
         SPARKPOST_API_KEY: ${{ secrets.SPARKPOST_API_KEY }}
-      run: ./scripts/infra plan -var "s3_access_key_id=${EXPORTS_S3_ACCESS_KEY_ID}" \
-                                -var "s3_secret_access_key=${EXPORTS_S3_SECRET_ACCESS_KEY}" \
-                                -var "SPARKPOST_API_KEY=${SPARKPOST_API_KEY}"
+      run: "./scripts/infra plan -var \"s3_access_key_id=${EXPORTS_S3_ACCESS_KEY_ID}\"
+                                -var \"s3_secret_access_key=${EXPORTS_S3_SECRET_ACCESS_KEY}\" 
+                                -var \"SPARKPOST_API_KEY=${SPARKPOST_API_KEY}\""
 
