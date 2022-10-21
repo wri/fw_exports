@@ -107,20 +107,22 @@ class FileService {
           question = { name: response.name, label: { [language]: response.name } };
           questions[record.attributes.report].push(question);
         }
-        // check if the answer is an image
+        // check if the answer is a file
         if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
           if (payload.length < 20) {
-            // download the image
-            const image = await axios({
+            // download the file
+            const file = await axios({
               url: response.value,
               responseType: "stream",
               responseEncoding: "utf-8"
             });
+            const fileName = response.value;
+            const [fileExtension] = fileName.split(".").slice(-1);
             // save it to the directory - directory name should be name of report/name of question
-            const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
-            archive.append(image.data, { name: imagePath });
+            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
+            archive.append(file.data, { name: filePath });
             // add the path to the csv file
-            record[question.label[language]] = imagePath;
+            record[question.label[language]] = filePath;
           } else record[question.label[language]] = response.value;
         } else record[question.label[language]] = response.value;
       }
@@ -216,26 +218,28 @@ class FileService {
           questionName: response.name,
           child: null
         };
-        // check if the answer is an image
+        // check if the answer is a file
         if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
           if (payload.length < 20) {
-            // download the image
-            const image = await axios({
+            // download the file
+            const file = await axios({
               url: response.value,
               responseType: "stream",
               responseEncoding: "utf-8"
             });
+            const fileName = response.value;
+            const [fileExtension] = fileName.split(".").slice(-1);
             // save it to the directory - directory name should be name of report/name of question
-            const imagePath = `${record.attributes.reportName}/${response.name}/attachment.jpeg`;
-            archive.append(image.data, { name: imagePath });
-            answer.value = "image/jpeg";
+            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
+            archive.append(file.data, { name: filePath });
+            answer.value = fileExtension === "jpeg" ? "image/jpeg" : `audio/${fileExtension}`;
             // create record in manifest.reportFiles
             bundle.manifest.reportFiles.push({
               reportName: newRecord.reportName,
               questionName: answer.questionName,
-              size: image.headers["content-length"],
-              path: imagePath,
-              type: "image/jpeg"
+              size: file.headers["content-length"],
+              path: filePath,
+              type: answer.value
             });
           }
         }
@@ -512,9 +516,9 @@ class FileService {
           question = { name: response.name, label: { [language]: response.name } };
           questions.push(question);
         }
-        // check if the answer is an image
+        // check if the answer is a file
         if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-          responseToShow = `Picture found at: ${response.value}`;
+          responseToShow = `File found at: ${response.value}`;
         } else responseToShow = response.value;
 
         doc
