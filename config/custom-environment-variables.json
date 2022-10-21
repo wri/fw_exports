@@ -7,11 +7,8 @@
     "secretAccessKey": "S3_SECRET_ACCESS_KEY",
     "bucket": "S3_BUCKET"
   },
-  "formsAPI": {
-    "url": "FORMS_API_URL"
-  },
-  "areasAPI": {
-    "url": "AREAS_API_URL"
+  "coreAPI": {
+    "url": "CORE_API_URL"
   },
   "alertsAPI": {
     "url": "ALERTS_API_URL"
