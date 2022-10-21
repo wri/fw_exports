@@ -227,7 +227,6 @@ class FileService {
               responseType: "stream",
               responseEncoding: "utf-8"
             });
-            // get the file extension
             const fileName = response.value;
             const [fileExtension] = fileName.split(".").slice(-1);
             // save it to the directory - directory name should be name of report/name of question
