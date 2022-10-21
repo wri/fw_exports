@@ -119,7 +119,7 @@ class FileService {
             const fileName = response.value;
             const [fileExtension] = fileName.split(".").slice(-1);
             // save it to the directory - directory name should be name of report/name of question
-            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${extension}`;
+            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
             archive.append(file.data, { name: filePath });
             // add the path to the csv file
             record[question.label[language]] = filePath;
@@ -230,9 +230,9 @@ class FileService {
             const fileName = response.value;
             const [fileExtension] = fileName.split(".").slice(-1);
             // save it to the directory - directory name should be name of report/name of question
-            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${extension}`;
+            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
             archive.append(file.data, { name: filePath });
-            answer.value = extension === "jpeg" ? "image/jpeg" : `audio/${extension}`;
+            answer.value = fileExtension === "jpeg" ? "image/jpeg" : `audio/${fileExtension}`;
             // create record in manifest.reportFiles
             bundle.manifest.reportFiles.push({
               reportName: newRecord.reportName,
