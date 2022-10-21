@@ -7,10 +7,10 @@ class AreaService {
   static async getArea(areaId) {
     logger.info(`Getting area with id ${areaId}`);
     try {
-      const baseURL = config.get("areasAPI.url");
+      const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/area/${areaId}`,
+        url: `/areas/${areaId}`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
@@ -27,10 +27,10 @@ class AreaService {
   static async getAreas() {
     logger.info(`Getting areas`);
     try {
-      const baseURL = config.get("areasAPI.url");
+      const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/area/teams`,
+        url: `/areas/userAndTeam`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
