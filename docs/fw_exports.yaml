@@ -120,6 +120,7 @@ paths:
         in: path
         required: true
     get:
+      description: Returns the url for a given id token received from a reports export request
       summary: ''
       operationId: get-v3-exports-reports-id
       responses:
@@ -134,7 +135,30 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/Error'
-      description: Returns the url for a given id token received from a reports export request
+    post:
+      description: Returns the id token for the exports file of the report (answer) images
+      operationId: post-v3-exports-reports-id
+      responses:
+        '200':
+          description: OK - The export upload has started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fileType:
+                  type: string
+                  description: Can be the string 'zip' or 'pdf' which dictates the file type of the exports response
+
+
   '/v3/exports/areas/exportOne/{areaId}':
     parameters:
       - schema:

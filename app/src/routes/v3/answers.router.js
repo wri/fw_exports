@@ -7,13 +7,15 @@
 
 const logger = require("logger").default;
 const Router = require("koa-router");
-const AnswerService = require("../../services/answers.service");
-const FileService = require("../../services/reportFile.service");
+const { AnswerService } = require("../../services/answers.service");
+const ReportFileService = require("../../services/reportFile.service");
+const { FileService } = require("../../services/file.service");
 import createShareableLink from "services/s3.service";
 const BucketURLModel = require("../../models/bucketURL.model");
 const { ObjectId } = require("mongoose").Types;
 const SparkpostService = require("../../services/sparkpost.service");
 const AdmZip = require("adm-zip");
+const axios = require("axios");
 
 const router = new Router({
   prefix: "/exports/reports"
@@ -26,19 +28,19 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
     // create file
     switch (fileType) {
       case "geojson":
-        file = await FileService.createGeojson(payload);
+        file = await ReportFileService.createGeojson(payload);
         break;
       case "shp":
-        file = await FileService.createShape(payload, fields);
+        file = await ReportFileService.createShape(payload, fields);
         break;
       case "csv":
-        file = await FileService.createCsv(payload, fields, templates, language);
+        file = await ReportFileService.createCsv(payload, fields, templates, language);
         break;
       case "fwbundle":
-        file = await FileService.createBundle(payload, templates);
+        file = await ReportFileService.createBundle(payload, templates);
         break;
       case "pdf":
-        file = await FileService.createPDF(payload, templates, fields, language);
+        file = await ReportFileService.createPDF(payload, templates, fields, language);
         break;
       default:
         break;
@@ -104,6 +106,89 @@ class AnswerRouter {
     ctx.body = { data: objId };
     ctx.status = 200;
   }
+
+  /**
+   * Exports the images of a given report
+   * @param {import("koa").Context & {params: {id?: string}}} ctx
+   */
+  static async exportImages(ctx) {
+    const answerId = ctx.params.id;
+    if (answerId === undefined) {
+      ctx.throw(400, "Answer id is required");
+    }
+
+    const fileType = ctx.request.body.fileType;
+    if (!["zip", "pdf"].includes(fileType)) {
+      ctx.throw(400, "File type must be pdf or zip");
+    }
+
+    const [answer] = await AnswerService.getAnswer({
+      reportid: answerId,
+      templateid: answerId
+    });
+    if (!answer) {
+      ctx.throw(404, "Report not found");
+    }
+    const responses = answer.attributes.responses;
+
+    const templateId = answer.attributes.report;
+    const template = await AnswerService.getTemplate(templateId);
+    const questions = template.attributes.questions;
+
+    // Flatten the array of questions so questions and child questions are at the same nesting and get their type
+    const flatQuestionTypes = questions.reduce((acc, question) => {
+      return [...acc, question.type, ...question.childQuestions.map(q => q.type)];
+    }, []);
+
+    const isImageType = type => type === "blob";
+    const imageResponses = flatQuestionTypes
+      .reduce((acc, type, i) => {
+        if (isImageType(type)) {
+          return [...acc, i];
+        }
+        return acc;
+      }, [])
+      .map(i => responses[i]);
+
+    const imageBufferPromises = imageResponses
+      .filter(res => res.value !== null)
+      .map(async res => {
+        const response = await axios.get(res.value, {
+          responseType: "arraybuffer"
+        });
+        return response.data;
+      });
+    const imageBuffers = await Promise.all(imageBufferPromises);
+
+    let exportBuffer;
+    if (fileType === "zip") {
+      const imagesArchiveInput = imageBuffers.map((buffer, i) => ({
+        data: buffer,
+        name: "img-" + i
+      }));
+      exportBuffer = await FileService.createArchive(imagesArchiveInput);
+    }
+
+    if (fileType === "pdf") {
+      const imagesPdfInput = imageBuffers.map(buffer => ({
+        data: buffer
+      }));
+      exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
+    }
+
+    const id = new ObjectId();
+
+    createShareableLink({
+      extension: `.${fileType}`,
+      body: exportBuffer
+    }).then(URL => {
+      const URLModel = new BucketURLModel({ id: id, URL: URL });
+      URLModel.save();
+    });
+
+    ctx.body = { data: id };
+    ctx.status = 200;
+  }
 }
 
 const getAnswerSet = async (ctx, next) => {
@@ -160,5 +245,6 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 router.get("/:id", isAuthenticatedMiddleware, AnswerRouter.getUrl);
 router.post("/exportSome", isAuthenticatedMiddleware, getAnswerSet, getTemplates, AnswerRouter.export);
 router.post("/exportAll", isAuthenticatedMiddleware, getAllAnswers, getTemplates, AnswerRouter.export);
+router.post("/:id/images", isAuthenticatedMiddleware, AnswerRouter.exportImages);
 
 export default router;
