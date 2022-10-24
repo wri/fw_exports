@@ -135,9 +135,18 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/Error'
+
+  '/v3/exports/reports/{id}/images':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
     post:
       description: Returns the id token for the exports file of the report (answer) images
       operationId: post-v3-exports-reports-id
+      summary: Export report images
       responses:
         '200':
           description: OK - The export upload has started
@@ -148,6 +157,9 @@ paths:
                 properties:
                   data:
                     type: string
+        '401':
+          $ref: '#/components/responses/Error'
+
       requestBody:
         content:
           application/json:
@@ -157,6 +169,7 @@ paths:
                 fileType:
                   type: string
                   description: Can be the string 'zip' or 'pdf' which dictates the file type of the exports response
+
 
 
   '/v3/exports/areas/exportOne/{areaId}':
