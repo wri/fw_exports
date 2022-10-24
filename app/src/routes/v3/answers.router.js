@@ -51,7 +51,7 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
       const zip = new AdmZip(file);
       // read the zip file and upload to s3 bucket
       URL = await createShareableLink({
-        extension: `.zip`, // `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
+        extension: `.zip`,
         body: zip.toBuffer()
       });
     } else {
