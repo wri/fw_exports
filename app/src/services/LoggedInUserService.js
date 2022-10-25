@@ -19,9 +19,9 @@ class LoggedInUserService {
 
   async getLoggedUser(ctx, logger) {
     var _a;
-    logger.debug("[getLoggedUser] Obtaining loggedUser for token");
+    //logger.debug("[getLoggedUser] Obtaining loggedUser for token");
     if (!ctx.request.header.authorization) {
-      logger.debug("[getLoggedUser] No authorization header found, returning");
+      //logger.debug("[getLoggedUser] No authorization header found, returning");
       return;
     }
     try {
