@@ -122,7 +122,7 @@ class AnswerRouter {
       ctx.throw(400, "File type must be pdf or zip");
     }
 
-    const [answer] = await AnswerService.getAnswer({
+    const answer = await AnswerService.getAnswer({
       reportid: answerId,
       templateid: answerId
     });
