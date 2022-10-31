@@ -63,7 +63,7 @@ export class AnswerService {
       const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
         baseURL,
-        url: `/templates/getAllAnswersForUser`,
+        url: `/templates/allAnswers`,
         method: "GET",
         headers: {
           authorization: loggedInUserService.token
