@@ -3,13 +3,13 @@ import logger from "../logger";
 import axios from "axios";
 const loggedInUserService = require("./LoggedInUserService");
 
-export class AssignmentService {
+class AssignmentService {
   /**
-   * Returns the answer for a given id
+   * Returns the assignment for a given id
    * @param {assignmentId: string} assignmentId The id for the assignment to fetch
    * @returns The assignment object with the id
    */
-  static async getAnswer(assignmentId) {
+  static async getAssignment(assignmentId) {
     logger.info(`Getting assignment with id ${assignmentId}`);
     try {
       const baseURL = config.get("coreAPI.url");
@@ -43,7 +43,7 @@ export class AssignmentService {
         }
       });
       const assignments = response.data;
-      logger.info("Got all assignments", assignments);
+      logger.info(`Got ${assignments.data.length} assignments`);
       return assignments && assignments.data;
     } catch (e) {
       logger.error("Error while fetching assignments", e);
@@ -51,3 +51,5 @@ export class AssignmentService {
     }
   }
 }
+
+module.exports = AssignmentService;

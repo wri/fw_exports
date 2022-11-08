@@ -14,7 +14,7 @@ const allowedFields = [
   "notes",
   "status",
   "areaId",
-  "templateId",
+  "templateIds",
   "createdAt",
   "createdBy",
   "areaName",
@@ -123,7 +123,7 @@ class AssignementsFileService {
     // loop over records
     for await (const record of payload) {
       let geojson;
-
+      console.log(record, record.attributes.geostore, record.attributes.location);
       if (record.attributes.geostore) {
         // pull down geojson info
         if (!record.attributes.geostore.geojson) {
@@ -148,8 +148,8 @@ class AssignementsFileService {
             geojsonFile.features.push(feature);
           });
         }
-      } else {
-        record.attributes.locations.forEach(location => {
+      } else if (record.attributes.location && Array.isArray(record.attributes.location)) {
+        record.attributes.location.forEach(location => {
           const feature = {
             type: "Feature",
             geometry: {
@@ -160,7 +160,7 @@ class AssignementsFileService {
               id: record.id,
               ...record.attributes,
               alertType: location.alertType,
-              locations: null
+              location: null
             }
           };
           geojsonFile.features.push(feature);
@@ -183,6 +183,7 @@ class AssignementsFileService {
     // sanitise fields
     const fields = requestedFields.reduce((fieldsArray, currentField) => {
       if (allowedFields.includes(currentField)) fieldsArray.push(currentField);
+      return fieldsArray;
     }, []);
 
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
@@ -205,10 +206,24 @@ class AssignementsFileService {
       };
 
       let geojson;
-      if (!record.attributes.geostore.geojson) {
-        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
-        geojson = geojsonResponse.geojson;
-        if (geojson.features) {
+      if (record.attributes.geostore) {
+        if (!record.attributes.geostore.geojson) {
+          let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+          geojson = geojsonResponse.geojson;
+          if (geojson.features) {
+            geojson.features.forEach((feature, index) => {
+              let featureName = "feature" + index.toString();
+              // turn coordinates into simpler array
+              let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+              let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
+              row[featureName] = wkt;
+              if (!fields.includes(featureName)) fields.push(featureName);
+            });
+          }
+        }
+        // format geojson data
+        else if (record.attributes.geostore.geojson) {
+          geojson = record.attributes.geostore.geojson;
           geojson.features.forEach((feature, index) => {
             let featureName = "feature" + index.toString();
             // turn coordinates into simpler array
@@ -218,18 +233,6 @@ class AssignementsFileService {
             if (!fields.includes(featureName)) fields.push(featureName);
           });
         }
-      }
-      // format geojson data
-      else if (record.attributes.geostore.geojson) {
-        geojson = record.attributes.geostore.geojson;
-        geojson.features.forEach((feature, index) => {
-          let featureName = "feature" + index.toString();
-          // turn coordinates into simpler array
-          let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
-          let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
-          row[featureName] = wkt;
-          if (!fields.includes(featureName)) fields.push(featureName);
-        });
       }
       assignments.push(row);
     }
@@ -284,8 +287,8 @@ class AssignementsFileService {
           });
           shapeArray.features.push(...geojson.features);
         }
-      } else {
-        record.attributes.locations.forEach(location => {
+      } else if (record.attributes.location && Array.isArray(record.attributes.location)) {
+        record.attributes.location.forEach(location => {
           const feature = {
             type: "Feature",
             geometry: {
@@ -296,7 +299,7 @@ class AssignementsFileService {
               id: record.id,
               ...record.attributes,
               alertType: location.alertType,
-              locations: null
+              location: null
             }
           };
           shapeArray.features.push(feature);
