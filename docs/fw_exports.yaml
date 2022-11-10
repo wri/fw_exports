@@ -135,7 +135,6 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/Error'
-
   '/v3/exports/reports/{id}/images':
     parameters:
       - schema:
@@ -159,7 +158,6 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/Error'
-
       requestBody:
         content:
           application/json:
@@ -169,9 +167,6 @@ paths:
                 fileType:
                   type: string
                   description: Can be the string 'zip' or 'pdf' which dictates the file type of the exports response
-
-
-
   '/v3/exports/areas/exportOne/{areaId}':
     parameters:
       - schema:
@@ -252,6 +247,48 @@ paths:
         '401':
           $ref: '#/components/responses/Error'
       description: Returns the url for a given id token received from an areas export request
+  /v3/exports/assignments/exportAll:
+    post:
+      summary: Export all assignments
+      operationId: post-v3-exports-assignments-exportSome
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      description: 'Exports all assignements and associated images the user can see as either fwbundle or zipped csv or geojson or shp. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/assignments/{id} endpoint is for the URL once the export has completed'
+      tags:
+        - Assignments
+      requestBody:
+        $ref: '#/components/requestBodies/Export-all-assignments'
+    parameters: []
+  /v3/exports/assignments/exportSome:
+    post:
+      summary: Export some assignments
+      operationId: post-v3-exports-assignments-exportSome
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      description: 'Exports a selection of assignements and associated images given its id as either fwbundle or zipped csv or geojson or shp. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/assignments/{id} endpoint is for the URL once the export has completed'
+      tags:
+        - Assignments
+    parameters: []
 components:
   schemas: {}
   securitySchemes:
@@ -336,5 +373,31 @@ components:
                 type: string
             required:
               - ids
+    Export-some-assignments-request:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileTyoe:
+                type: string
+              fields:
+                type: array
+                items:
+                  type: string
+              ids:
+                type: string
+    Export-all-assignments:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileType:
+                type: string
+              fileds:
+                type: array
+                items:
+                  type: string
 security:
   - Authorization: []
