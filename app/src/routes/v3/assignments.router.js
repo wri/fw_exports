@@ -64,7 +64,7 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
     await newURL.save();
   } catch (error) {
     const newURL = new BucketURLModel({ id: id, URL: error });
-    newURL.save();
+    await newURL.save();
   }
 };
 
