@@ -58,7 +58,7 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
       });
     }
 
-    if (email) SparkpostService.sendMail(email, URL);
+    if (email) await SparkpostService.sendMail(email, URL);
 
     const newURL = new BucketURLModel({ id: id, URL: URL });
     await newURL.save();
@@ -74,7 +74,7 @@ class AssignmentRouter {
     let URL = await BucketURLModel.findOne({ id });
     if (URL) {
       ctx.body = { data: URL.URL };
-      BucketURLModel.deleteMany({ id: id });
+      await BucketURLModel.deleteMany({ id: id });
     } else ctx.body = { data: null };
     ctx.status = 200;
   }
