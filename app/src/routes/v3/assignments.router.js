@@ -61,7 +61,7 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
     if (email) SparkpostService.sendMail(email, URL);
 
     const newURL = new BucketURLModel({ id: id, URL: URL });
-    newURL.save();
+    await newURL.save();
   } catch (error) {
     const newURL = new BucketURLModel({ id: id, URL: error });
     newURL.save();
