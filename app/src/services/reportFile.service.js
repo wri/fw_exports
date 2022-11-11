@@ -471,7 +471,8 @@ class ReportFileService {
       doc.font("Helvetica-Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
 
       filteredFields.forEach((field, i) => {
-        doc.image(images[field].data, 50 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50, { fit: [20, 20] });
+        if (images?.[field]?.data)
+          doc.image(images[field].data, 50 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50, { fit: [20, 20] });
         let fieldName = "";
         if (titles[language][field]) fieldName = titles[language][field];
         else if (titles.en[field]) fieldName = titles.en[field];
@@ -481,42 +482,37 @@ class ReportFileService {
           .fontSize(11)
           .text(fieldName.toUpperCase(), 80 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50);
         let textToPrint = "";
-        if (Array.isArray(record.attributes[field])) {
+        const value = record.attributes?.[field];
+        if (Array.isArray(value)) {
           // if it's coordinates
-          if (typeof record.attributes[field][0] === "object") {
+          if (typeof value[0] === "object") {
             // if it's an array of objects ({lon: number, lat: number})
-            if (record.attributes[field].length > 1) {
+            if (value.length > 1) {
               textToPrint = "MULTIPOINT (";
-              record.attributes[field].forEach(point => {
+              record.attributes?.[field].forEach(point => {
                 textToPrint =
-                  textToPrint + `(${point.lon.toString().substring(0, 9)} ${point.lat.toString().substring(0, 9)}), `;
+                  textToPrint + `(${point.lon?.toString().substring(0, 9)} ${point.lat?.toString().substring(0, 9)}), `;
               });
               textToPrint.slice(0, -1);
               textToPrint.slice(0, -1);
               textToPrint = textToPrint + ")";
             } else {
-              textToPrint = `POINT (${record.attributes[field][0].lon.toString().substring(0, 9)} ${record.attributes[
-                field
-              ][0].lat
-                .toString()
+              textToPrint = `POINT (${value[0].lon?.toString().substring(0, 9)} ${value[0].lat
+                ?.toString()
                 .substring(0, 9)})`;
             }
           } else {
             // if it's an array of coordinates
-            textToPrint = `POINT (${record.attributes[field][0].toString().substring(0, 9)} ${record.attributes[
-              field
-            ][1]
-              .toString()
-              .substring(0, 9)})`;
+            textToPrint = `POINT (${value[0]?.toString().substring(0, 9)} ${value[1]?.toString().substring(0, 9)})`;
           }
-        } else textToPrint = record.attributes[field];
+        } else textToPrint = value;
         doc.fontSize(13).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
       });
       doc.moveDown(1);
       doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
       doc.moveDown(1);
       // loop over responses
-      record.attributes.responses.forEach((response, i) => {
+      record.attributes.responses?.forEach((response, i) => {
         let responseToShow = "";
         // find the question in questions, if not found, add
         let question = questions.find(question => question.name === response.name);
@@ -525,8 +521,9 @@ class ReportFileService {
           questions.push(question);
         }
         // check if the answer is a file
-        if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-          responseToShow = `File found at: ${response.value}`;
+        if (["blob", "audio"].includes(question.type)) {
+          const files = Array.isArray(response.value) ? response.value : [response.value];
+          responseToShow = `File(s) found at: ${files.join(", ")}`;
         } else responseToShow = response.value;
 
         doc
@@ -539,7 +536,6 @@ class ReportFileService {
       });
 
       if (fields.includes("clickedPosition")) {
-        //doc.image(images.clickedPosition.data, 50, doc.y, { fit: [20, 20] }); //, 270 + 50 * record.attributes.responses.length, { fit: [20, 20] });
         let fieldName = "";
         if (titles[language].clickedPosition) fieldName = titles[language].clickedPosition;
         else fieldName = "Clicked Position";
@@ -551,7 +547,7 @@ class ReportFileService {
             // if it's an array of objects ({lon: number, lat: number})
             if (record.attributes.clickedPosition.length > 1) {
               textToPrint = "MULTIPOINT (";
-              record.attributes.clickedPosition.forEach(point => {
+              record.attributes.clickedPosition?.forEach(point => {
                 textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
               });
               textToPrint.slice(0, -1);
