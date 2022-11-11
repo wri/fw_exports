@@ -161,7 +161,7 @@ class ReportFileService {
     });
   }
 
-  static async createBundle(payload, templates) {
+  static async createBundle(answers, templates) {
     // create a fwbundle
     let bundle = {
       version: 2,
@@ -178,17 +178,16 @@ class ReportFileService {
         reportFiles: [] // has the data for report files
       }
     };
-    var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
+    const writeStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
-
     archive.on("error", function (err) {
       throw err;
     });
-    archive.pipe(myWritableStreamBuffer);
+    archive.pipe(writeStreamBuffer);
 
     // set templates
     templates.forEach(template => {
@@ -196,61 +195,71 @@ class ReportFileService {
     });
 
     // loop over records
-    for await (const record of payload) {
+    for await (const answer of answers) {
       let newRecord = {
-        id: record.id,
+        id: answer.id,
         area: {
-          id: record.attributes.areaOfInterest,
-          name: record.attributes.areaOfInterestName
+          id: answer.attributes.areaOfInterest,
+          name: answer.attributes.areaOfInterestName
         },
-        reportName: record.attributes.reportName,
-        userPosition: record.attributes.userPosition.toString(),
-        clickedPosition: JSON.stringify(record.attributes.clickedPosition),
-        date: record.attributes.createdAt,
+        reportName: answer.attributes.reportName,
+        userPosition: answer.attributes.userPosition.toString(),
+        clickedPosition: JSON.stringify(answer.attributes.clickedPosition),
+        date: answer.attributes.createdAt,
         answers: []
       };
+      const template = templates.find(t => answer.attributes.report.toString() === t.id.toString());
 
       // loop over answers
-      for await (const response of record.attributes.responses) {
-        let answer = {
+      for await (const response of answer.attributes.responses) {
+        const question = template.attributes.questions.find(q => q.name === response.name);
+        let exportAnswer = {
           value: response.value,
           questionName: response.name,
           child: null
         };
-        // check if the answer is a file
-        if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-          if (payload.length < 20) {
-            // download the file
-            const file = await axios({
-              url: response.value,
+
+        if (["blob", "audio"].includes(question.type)) {
+          const fileUrls = Array.isArray(response.value) ? response.value : [response.value];
+
+          const fileDownloadPromises = fileUrls.map(url =>
+            axios({
+              url: url,
               responseType: "stream",
               responseEncoding: "utf-8"
-            });
-            const fileName = response.value;
+            })
+          );
+          const files = await Promise.all(fileDownloadPromises);
+
+          const filePaths = [];
+          files.forEach((file, i) => {
+            const fileName = fileUrls[i];
             const [fileExtension] = fileName.split(".").slice(-1);
-            // save it to the directory - directory name should be name of report/name of question
-            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
+            const filePath = `${answer.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
+
             archive.append(file.data, { name: filePath });
-            answer.value = fileExtension === "jpeg" ? "image/jpeg" : `audio/${fileExtension}`;
-            // create record in manifest.reportFiles
+
+            filePaths.push(filePath);
             bundle.manifest.reportFiles.push({
               reportName: newRecord.reportName,
-              questionName: answer.questionName,
+              questionName: exportAnswer.questionName,
               size: file.headers["content-length"],
               path: filePath,
-              type: answer.value
+              type: `${question.type}/${fileExtension}`
             });
-          }
+          });
+          exportAnswer.value = question.type === "blob" ? filePaths : filePaths[0];
         }
+
         // check if the answer is a child
         // find an existing answer's question name inside this answer's question name
         const answerIndex = newRecord.answers.findIndex(existingAnswer => {
-          let found = answer.questionName.search(existingAnswer.questionName);
+          let found = exportAnswer.questionName.search(existingAnswer.questionName);
           if (found === -1) return false;
           else return true;
         });
-        if (answerIndex !== -1) newRecord.answers[answerIndex].child = answer;
-        else newRecord.answers.push(answer);
+        if (answerIndex !== -1) newRecord.answers[answerIndex].child = exportAnswer;
+        else newRecord.answers.push(exportAnswer);
       }
       bundle.reports.push(newRecord);
     }
@@ -258,11 +267,11 @@ class ReportFileService {
     archive.finalize();
 
     return new Promise((resolve, reject) => {
-      myWritableStreamBuffer.on("finish", () => {
-        const contents = myWritableStreamBuffer.getContents();
+      writeStreamBuffer.on("finish", () => {
+        const contents = writeStreamBuffer.getContents();
         resolve(contents);
       });
-      myWritableStreamBuffer.on("error", reject);
+      writeStreamBuffer.on("error", reject);
     });
   }
 
