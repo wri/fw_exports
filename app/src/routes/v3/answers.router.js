@@ -196,8 +196,8 @@ const getAnswerSet = async (ctx, next) => {
   let answers = [];
   for await (const id of ids) {
     const answer = await AnswerService.getAnswer(id);
-    if (!answer[0]) ctx.throw(404, "Some answers don't exist");
-    else answers.push(answer[0]);
+    if (!answer) ctx.throw(404, "Some answers don't exist");
+    else answers.push(answer);
   }
   ctx.payload = answers;
   await next();
