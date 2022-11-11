@@ -26,105 +26,104 @@ const allowedFields = [
 ];
 
 class ReportFileService {
-  static async createCsv(payload, fields, templates, defaultLanguage) {
+  static async createCsv(answers, fields, templates, defaultLanguage) {
     // fields is an array of accepted fields
     // payload is an array of objects
 
-    logger.info(`Exporting ${payload.length} reports`);
+    logger.info(`Exporting ${answers.length} reports`);
 
-    var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
+    var writeStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 100 * 1024 // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
-
     archive.on("error", function (err) {
       throw err;
     });
-    archive.pipe(myWritableStreamBuffer);
+    archive.pipe(writeStreamBuffer);
 
     // create object questions with keys of template ids and values of question arrays. There will be lots of questions depending on the number of templates.
     let questions = {};
     templates.forEach(template => {
-      if (!questions[template.id]) questions[template.id] = [];
-      template.attributes.questions.forEach(question => {
-        questions[template.id].push({
-          ...question,
-          defaultLanguage: template.attributes.defaultLanguage
-        });
-        if (question.childQuestions && question.childQuestions.length > 0)
-          questions[template.id].push(
-            ...question.childQuestions.map(cQuestion => {
-              return {
-                ...cQuestion,
-                defaultLanguage: template.attributes.defaultLanguage
-              };
-            })
-          );
+      questions[template.id] ??= [];
+
+      const defaultLanguage = template.attributes.defaultLanguage;
+      const templateQuestions = template.attributes.questions.flatMap(question => {
+        const questionWithDefaultLanguage = { ...question, defaultLanguage };
+
+        if (!question.childQuestions) return questionWithDefaultLanguage;
+
+        const childQuestionsWithDefaultLanguage = question.childQuestions.map(cQuestion => ({
+          ...cQuestion,
+          defaultLanguage
+        }));
+        return [questionWithDefaultLanguage, ...childQuestionsWithDefaultLanguage];
       });
+
+      questions[template.id].push(...templateQuestions);
     });
 
-    // flatten object
-    for await (const record of payload) {
-      // check if language is supported
-      let language = "";
-      const template = templates.find(temp => temp.id === record.attributes.report);
-      if (template.attributes.languages.includes(defaultLanguage)) language = defaultLanguage;
-      else language = template.attributes.defaultLanguage;
+    const stringifyCoords = coords => {
+      if (coords.length === 0) return "";
 
-      logger.info(`Exporting ${record.attributes.reportName}`);
-      for (const property in record.attributes) {
-        let textToPrint = "";
-        if (Array.isArray(record.attributes[property]) && property !== "responses") {
-          // if it's coordinates
-          if (typeof record.attributes[property][0] === "object") {
-            // if it's an array of objects ({lon: number, lat: number})
-            if (record.attributes[property].length > 1) {
-              textToPrint = "MULTIPOINT (";
-              record.attributes[property].forEach(point => {
-                textToPrint = textToPrint + `(${point.lon} ${point.lat}), `;
-              });
-              textToPrint.slice(0, -1);
-              textToPrint.slice(0, -1);
-              textToPrint = textToPrint + ")";
-            } else {
-              textToPrint = `POINT (${record.attributes[property][0].lon} ${record.attributes[property][0].lat})`;
-            }
-          } else {
-            // if it's an array of coordinates
-            textToPrint = `POINT (${record.attributes[property][0]} ${record.attributes[property][1]})`;
-          }
-        } else textToPrint = record.attributes[property];
-        record[property] = textToPrint;
-      }
+      // Assumes all elements share the same type
+      const isObjectCoords = typeof coords[0] === "object";
+      const pairStrings = coords.map(coord => (isObjectCoords ? `${coord.lon} ${coord.lat}` : coord.join(" ")));
 
-      // loop over responses
-      for await (const response of record.responses) {
-        // find the question in questions, if not found, add
-        let question = questions[record.attributes.report].find(question => question.name === response.name);
+      if (coords.length === 1) return `POINT (${pairStrings[0]})`;
+
+      const pairBracketedStrings = pairStrings.map(p => `(${p})`);
+      return `MULTIPOINT (${pairBracketedStrings.join(", ")})`;
+    };
+
+    for await (const answer of answers) {
+      Object.assign(answer, answer.attributes);
+      console.log({ clicked: answer.attributes.clickedPosition, user: answer.attributes.userPosition });
+      answer.clickedPosition = stringifyCoords(answer.attributes.clickedPosition);
+      answer.userPosition = stringifyCoords(answer.attributes.userPosition);
+
+      const templateId = answer.attributes.report;
+      const template = templates.find(t => t.id === templateId);
+      const language = template.attributes.languages.includes(defaultLanguage)
+        ? defaultLanguage
+        : template.attributes.defaultLanguage;
+
+      for await (const response of answer.responses) {
+        let question = questions[templateId].find(question => question.name === response.name);
         if (!question) {
           question = { name: response.name, label: { [language]: response.name } };
-          questions[record.attributes.report].push(question);
+          questions[templateId].push(question);
         }
-        // check if the answer is a file
-        if (response.value && response.value.startsWith("https://s3.amazonaws.com")) {
-          if (payload.length < 20) {
-            // download the file
-            const file = await axios({
-              url: response.value,
-              responseType: "stream",
-              responseEncoding: "utf-8"
-            });
-            const fileName = response.value;
-            const [fileExtension] = fileName.split(".").slice(-1);
-            // save it to the directory - directory name should be name of report/name of question
-            const filePath = `${record.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
-            archive.append(file.data, { name: filePath });
-            // add the path to the csv file
-            record[question.label[language]] = filePath;
-          } else record[question.label[language]] = response.value;
-        } else record[question.label[language]] = response.value;
+
+        const isFileResponse = ["blob", "audio"].includes(question.type);
+        if (!isFileResponse) {
+          answer[question.label[language]] = response.value;
+          continue;
+        }
+
+        const fileUrls = Array.isArray(response.value) ? response.value : [response.value];
+
+        const fileDownloadPromises = fileUrls.map(url =>
+          axios({
+            url: url,
+            responseType: "stream",
+            responseEncoding: "utf-8"
+          })
+        );
+        const files = await Promise.all(fileDownloadPromises);
+
+        const filePaths = [];
+        files.forEach((file, i) => {
+          const fileName = fileUrls[i];
+          const [fileExtension] = fileName.split(".").slice(-1);
+          const filePath = `${answer.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
+
+          archive.append(file.data, { name: filePath });
+          filePaths.push(filePath);
+        });
+
+        answer[question.label[language]] = filePaths.join(", ");
       }
     }
 
@@ -142,7 +141,7 @@ class ReportFileService {
         else return field;
       });
 
-      const templatePayload = payload.filter(answer => answer.attributes.report.toString() === template.id.toString());
+      const templatePayload = answers.filter(answer => answer.attributes.report.toString() === template.id.toString());
 
       const opts = { fields: columnLabels };
       const csv = parse(templatePayload, opts);
@@ -153,12 +152,12 @@ class ReportFileService {
     logger.info("CSV finalised");
 
     return new Promise((resolve, reject) => {
-      myWritableStreamBuffer.on("finish", () => {
+      writeStreamBuffer.on("finish", () => {
         logger.info("Finished buffering");
-        const contents = myWritableStreamBuffer.getContents();
+        const contents = writeStreamBuffer.getContents();
         resolve(contents);
       });
-      myWritableStreamBuffer.on("error", reject);
+      writeStreamBuffer.on("error", reject);
     });
   }
 
