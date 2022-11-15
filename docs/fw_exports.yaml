@@ -73,6 +73,8 @@ paths:
                   fileType: string
                   fields:
                     - string
+      tags:
+        - Reports
   /v3/exports/reports/exportAll:
     parameters: []
     post:
@@ -112,6 +114,8 @@ paths:
                 email:
                   type: string
         description: ''
+      tags:
+        - Reports
   '/v3/exports/reports/{id}':
     parameters:
       - schema:
@@ -121,7 +125,7 @@ paths:
         required: true
     get:
       description: Returns the url for a given id token received from a reports export request
-      summary: ''
+      summary: Get report export URL
       operationId: get-v3-exports-reports-id
       responses:
         '200':
@@ -135,6 +139,8 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/Error'
+      tags:
+        - Reports
   '/v3/exports/reports/{id}/images':
     parameters:
       - schema:
@@ -167,6 +173,8 @@ paths:
                 fileType:
                   type: string
                   description: Can be the string 'zip' or 'pdf' which dictates the file type of the exports response
+      tags:
+        - Reports
   '/v3/exports/areas/exportOne/{areaId}':
     parameters:
       - schema:
@@ -200,6 +208,8 @@ paths:
       description: 'Exports an and associated images given its id as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
       requestBody:
         $ref: '#/components/requestBodies/Export-areas-request'
+      tags:
+        - Areas
   /v3/exports/areas/exportAll:
     parameters: []
     post:
@@ -224,6 +234,8 @@ paths:
       description: 'Exports all areas and associated images available to the user as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
       requestBody:
         $ref: '#/components/requestBodies/Export-areas-request'
+      tags:
+        - Areas
   '/v3/exports/areas/{id}':
     parameters:
       - schema:
@@ -232,7 +244,7 @@ paths:
         in: path
         required: true
     get:
-      summary: ''
+      summary: Get Areas Export URL
       operationId: get-v3-exports-areas-id
       responses:
         '200':
@@ -247,10 +259,12 @@ paths:
         '401':
           $ref: '#/components/responses/Error'
       description: Returns the url for a given id token received from an areas export request
+      tags:
+        - Areas
   /v3/exports/assignments/exportAll:
     post:
       summary: Export all assignments
-      operationId: post-v3-exports-assignments-exportSome
+      operationId: post-v3-exports-assignments-exportAll
       responses:
         '200':
           description: OK
@@ -289,6 +303,31 @@ paths:
       tags:
         - Assignments
     parameters: []
+  '/v3/exports/assignments/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Get Assignments Export URL
+      operationId: get-v3-exports-assignments-id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      description: Returns the url for a given id token received from an assignments export request
+      tags:
+        - Areas
 components:
   schemas: {}
   securitySchemes:
