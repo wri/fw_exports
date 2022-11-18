@@ -248,14 +248,7 @@ paths:
       operationId: get-v3-exports-areas-id
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
+          $ref: '#/components/responses/Url'
         '401':
           $ref: '#/components/responses/Error'
       description: Returns the url for a given id token received from an areas export request
@@ -267,14 +260,7 @@ paths:
       operationId: post-v3-exports-assignments-exportAll
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
+          $ref: '#/components/responses/Id'
         '401':
           $ref: '#/components/responses/Error'
       description: 'Exports all assignements and associated images the user can see as either fwbundle or zipped csv or geojson or shp. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/assignments/{id} endpoint is for the URL once the export has completed'
@@ -289,14 +275,7 @@ paths:
       operationId: post-v3-exports-assignments-exportSome
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
+          $ref: '#/components/responses/Id'
         '401':
           $ref: '#/components/responses/Error'
       description: 'Exports a selection of assignements and associated images given its id as either fwbundle or zipped csv or geojson or shp. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/assignments/{id} endpoint is for the URL once the export has completed'
@@ -317,14 +296,7 @@ paths:
       operationId: get-v3-exports-assignments-id
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
+          $ref: '#/components/responses/Url'
         '401':
           $ref: '#/components/responses/Error'
       description: Returns the url for a given id token received from an assignments export request
@@ -372,6 +344,24 @@ components:
               uptime:
                 type: number
           examples: {}
+    Id:
+      description: Id to poll endpoint
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: string
+    Url:
+      description: S3 bucket url
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: string
   requestBodies:
     Export-areas-request:
       content:
