@@ -302,6 +302,8 @@ paths:
       description: 'Exports a selection of assignements and associated images given its id as either fwbundle or zipped csv or geojson or shp. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/assignments/{id} endpoint is for the URL once the export has completed'
       tags:
         - Assignments
+      requestBody:
+        $ref: '#/components/requestBodies/Export-some-assignments-request'
     parameters: []
   '/v3/exports/assignments/{id}':
     parameters:
