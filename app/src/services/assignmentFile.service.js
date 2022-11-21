@@ -60,7 +60,7 @@ class AssignementsFileService {
           id: record.id
         };
 
-        if (!record.attributes.geostore.geojson) {
+        if (typeof record.attributes.geostore === "string") {
           let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
           newRecord.geostore = geojsonResponse;
         }
