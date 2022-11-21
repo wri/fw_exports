@@ -410,7 +410,7 @@ components:
           schema:
             type: object
             properties:
-              fileTyoe:
+              fileType:
                 type: string
               fields:
                 type: array
