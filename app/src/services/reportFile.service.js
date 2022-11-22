@@ -68,8 +68,8 @@ class ReportFileService {
       if (coords.length === 0) return "";
 
       // Assumes all elements share the same type
-      const isObjectCoords = typeof coords[0] === "object";
-      const pairStrings = coords.map(coord => (isObjectCoords ? `${coord.lon} ${coord.lat}` : coord.join(" ")));
+      const isArrayCoords = Array.isArray(coords[0]);
+      const pairStrings = coords.map(coord => (isArrayCoords ? coord.join(" ") : `${coord.lon} ${coord.lat}`));
 
       if (coords.length === 1) return `POINT (${pairStrings[0]})`;
 
@@ -79,7 +79,6 @@ class ReportFileService {
 
     for await (const answer of answers) {
       Object.assign(answer, answer.attributes);
-      console.log({ clicked: answer.attributes.clickedPosition, user: answer.attributes.userPosition });
       answer.clickedPosition = stringifyCoords(answer.attributes.clickedPosition);
       answer.userPosition = stringifyCoords(answer.attributes.userPosition);
 
