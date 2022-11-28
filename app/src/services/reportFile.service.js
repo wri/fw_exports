@@ -364,7 +364,8 @@ class ReportFileService {
           ...record.attributes
         }
       };
-      if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
+
+      if (record.attributes.clickedPosition) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
           coordinates.push([position.lon, position.lat]);
@@ -372,11 +373,6 @@ class ReportFileService {
         shape.geometry = {
           type: "MultiPoint",
           coordinates
-        };
-      } else {
-        shape.geometry = {
-          type: "Point",
-          coordinates: [record.attributes.clickedPosition.lon, record.attributes.clickedPosition.lat]
         };
       }
       geojson.features.push(shape);
