@@ -145,15 +145,14 @@ class AnswerRouter {
       }, [])
       .map(i => responses[i]);
 
-    const imageBufferPromises = imageResponses
-      .filter(res => res.value !== null)
-      .map(async res => {
-        const response = await axios.get(res.value, {
-          responseType: "arraybuffer"
-        });
-        return response.data;
-      });
-    const imageBuffers = await Promise.all(imageBufferPromises);
+    const imagePromises = [];
+    for (const imageResponse of imageResponses) {
+      const imageUrls = imageResponse.value ?? [];
+      for (const url of imageUrls) {
+        imagePromises.push(axios.get(url, { responseType: "arraybuffer" }).then(res => res.data));
+      }
+    }
+    const imageBuffers = await Promise.all(imagePromises);
 
     let exportBuffer;
     if (fileType === "zip") {
