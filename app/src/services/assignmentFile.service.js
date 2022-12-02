@@ -266,7 +266,7 @@ class AssignementsFileService {
           geojson.features.forEach(feature => {
             feature.properties = {
               id: record.id.toString(),
-              ...record.attributes.map(attribute => {
+              ...Object.values(record.attributes).map(attribute => {
                 if (typeof attribute === "object") return JSON.stringify(attribute);
                 else return attribute;
               })
@@ -279,7 +279,7 @@ class AssignementsFileService {
           geojson.features.forEach(feature => {
             feature.properties = {
               id: record.id.toString(),
-              ...record.attributes.map(attribute => {
+              ...Object.values(record.attributes).map(attribute => {
                 if (typeof attribute === "object") return JSON.stringify(attribute);
                 else return attribute;
               })
