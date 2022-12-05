@@ -46,7 +46,11 @@ export class FileService {
     doc.pipe(writeStreamBuffer);
 
     for (const image of images) {
-      doc.image(image.data, { fit: [100, 100] });
+      const page = doc.addPage();
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      console.log({ pageHeight, pageWidth });
+      page.image(image.data, { fit: [pageWidth * 0.8, pageHeight * 0.8] });
     }
 
     doc.end();

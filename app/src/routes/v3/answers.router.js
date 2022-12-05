@@ -132,7 +132,8 @@ class AnswerRouter {
 
     // Flatten the array of questions so questions and child questions are at the same nesting and get their type
     const flatQuestionTypes = questions.reduce((acc, question) => {
-      return [...acc, question.type, ...question.childQuestions.map(q => q.type)];
+      const childQuestionTypes = question.childQuestions?.map(q => q.type) ?? [];
+      return [...acc, question.type, ...childQuestionTypes];
     }, []);
 
     const isImageType = type => type === "blob";
