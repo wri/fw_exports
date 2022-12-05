@@ -49,7 +49,6 @@ export class FileService {
       const page = doc.addPage();
       const pageWidth = doc.page.width;
       const pageHeight = doc.page.height;
-      console.log({ pageHeight, pageWidth });
       page.image(image.data, { fit: [pageWidth * 0.8, pageHeight * 0.8] });
     }
 
