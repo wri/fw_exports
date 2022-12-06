@@ -518,7 +518,7 @@ class ReportFileService {
         // check if the answer is a file
         if (["blob", "audio"].includes(question.type)) {
           const files = Array.isArray(response.value) ? response.value : [response.value];
-          responseToShow = `File(s) found at: ${files.join(", ")}`;
+          responseToShow = `File(s) found at: \r\n${files.join("\r\n")}`;
         } else responseToShow = response.value;
 
         doc
