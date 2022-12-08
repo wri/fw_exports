@@ -333,7 +333,6 @@ class ReportFileService {
 
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
-        const contents = myWritableStreamBuffer.getContents();
         resolve(newshpfile);
       });
       myWritableStreamBuffer.on("error", reject);
@@ -507,7 +506,7 @@ class ReportFileService {
       doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
       doc.moveDown(1);
       // loop over responses
-      record.attributes.responses?.forEach((response, i) => {
+      record.attributes.responses?.forEach(response => {
         let responseToShow = "";
         // find the question in questions, if not found, add
         let question = questions.find(question => question.name === response.name);
