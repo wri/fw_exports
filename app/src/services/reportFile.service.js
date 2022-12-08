@@ -515,19 +515,27 @@ class ReportFileService {
           question = { name: response.name, label: { [language]: response.name } };
           questions.push(question);
         }
+        let files = [];
         // check if the answer is a file
         if (["blob", "audio"].includes(question.type)) {
-          const files = Array.isArray(response.value) ? response.value : [response.value];
+          files = Array.isArray(response.value) ? response.value : [response.value];
           responseToShow = `File(s) found at: \n${files.join("\n")}`;
         } else responseToShow = response.value;
 
         doc
           .font("Helvetica-Bold")
           .fontSize(11)
-          .text(question.label[language] || question.label[question.defaultLanguage], 50); //, lineY + 15 + 50 * i);
+          .text(question.label[language] || question.label[question.defaultLanguage], 50, doc.y, { underline: false }); //, lineY + 15 + 50 * i);
         doc.moveDown(0.5);
-        doc.font("Helvetica").fontSize(11).text(responseToShow, 50); //, lineY + 30 + 50 * i);
-        doc.moveDown(1);
+        if (files.length > 0)
+          files.forEach(file => {
+            doc.font("Helvetica").fontSize(11).text(file, 50, doc.y, { link: file, underline: true }); //, lineY + 30 + 50 * i);
+            doc.moveDown(1);
+          });
+        else {
+          doc.font("Helvetica").fontSize(11).text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
+          doc.moveDown(1);
+        }
       });
 
       if (fields.includes("clickedPosition")) {
