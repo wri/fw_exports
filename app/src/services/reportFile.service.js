@@ -258,7 +258,7 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
-    let questions = getQuestions(templates);
+    //let questions = getQuestions(templates);
 
     let shapeArray = {
       type: "FeatureCollection",
@@ -266,26 +266,23 @@ class FileService {
     };
 
     for await (const record of payload) {
-      const language = record.attributes.language;
+      //const language = record.attributes.language;
       let shape = {
         type: "Feature",
         properties: {
           id: record.id
         }
       };
+
+      const filteredFields = fields.filter(field => allowedFields.includes(field));
       // human readable keys
       Object.keys(record.attributes).forEach(key => {
-        if (key !== "responses" && allowedFields.includes(key)) {
-          if (titles[language][key]) shape.properties[titles[language][key]] = record.attributes[key];
-          else shape.properties[key] = record.attributes[key];
-        }
+        if (key !== "responses" && filteredFields.includes(key)) shape.properties[key] = record.attributes[key];
       });
 
       // human readable questions
       record.attributes.responses.forEach(response => {
-        let question = questions[record.attributes.report].find(question => question.name === response.name);
-        if (question && question.label[language]) shape.properties[question.label[language]] = response.value;
-        else shape.properties[response.name] = response.value;
+        shape.properties[response.name] = response.value;
       });
       delete shape.properties.responses;
 
