@@ -45,25 +45,7 @@ class FileService {
     archive.pipe(myWritableStreamBuffer);
 
     // create object questions with keys of template ids and values of question arrays. There will be lots of questions depending on the number of templates.
-    let questions = {};
-    templates.forEach(template => {
-      if (!questions[template.id]) questions[template.id] = [];
-      template.attributes.questions.forEach(question => {
-        questions[template.id].push({
-          ...question,
-          defaultLanguage: template.attributes.defaultLanguage
-        });
-        if (question.childQuestions && question.childQuestions.length > 0)
-          questions[template.id].push(
-            ...question.childQuestions.map(cQuestion => {
-              return {
-                ...cQuestion,
-                defaultLanguage: template.attributes.defaultLanguage
-              };
-            })
-          );
-      });
-    });
+    let questions = getQuestions(templates);
 
     // flatten object
     for await (const record of payload) {
@@ -263,7 +245,7 @@ class FileService {
     });
   }
 
-  static async createShape(payload, fields) {
+  static async createShape(payload, fields, templates) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -276,24 +258,34 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
+    //let questions = getQuestions(templates);
+
     let shapeArray = {
       type: "FeatureCollection",
       features: []
     };
 
-    // sanitise fields
-    const filteredFields = allowedFields.filter(value => fields.includes(value));
-
     for await (const record of payload) {
+      //const language = record.attributes.language;
       let shape = {
         type: "Feature",
         properties: {
           id: record.id
         }
       };
-      filteredFields.forEach(field => {
-        if (record.attributes[field]) shape.properties[field] = record.attributes[field];
+
+      const filteredFields = fields.filter(field => allowedFields.includes(field));
+      // human readable keys
+      Object.keys(record.attributes).forEach(key => {
+        if (key !== "responses" && filteredFields.includes(key)) shape.properties[key] = record.attributes[key];
       });
+
+      // human readable questions
+      record.attributes.responses.forEach(response => {
+        shape.properties[response.name] = response.value;
+      });
+      delete shape.properties.responses;
+
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
@@ -322,14 +314,13 @@ class FileService {
 
     return new Promise((resolve, reject) => {
       myWritableStreamBuffer.on("finish", () => {
-        const contents = myWritableStreamBuffer.getContents();
         resolve(newshpfile);
       });
       myWritableStreamBuffer.on("error", reject);
     });
   }
 
-  static async createGeojson(payload) {
+  static async createGeojson(payload, templates) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -342,17 +333,36 @@ class FileService {
     });
     archive.pipe(myWritableStreamBuffer);
 
+    let questions = getQuestions(templates);
+
     let geojson = {
       type: "FeatureCollection",
       features: []
     };
     for await (const record of payload) {
+      const language = record.attributes.language;
+
       let shape = {
         type: "Feature",
-        properties: {
-          ...record.attributes
-        }
+        properties: {}
       };
+
+      // human readable keys
+      Object.keys(record.attributes).forEach(key => {
+        if (key !== "responses") {
+          if (titles[language][key]) shape.properties[titles[language][key]] = record.attributes[key];
+          else shape.properties[key] = record.attributes[key];
+        }
+      });
+
+      // human readable questions
+      record.attributes.responses.forEach(response => {
+        let question = questions[record.attributes.report].find(question => question.name === response.name);
+        if (question && question.label[language]) shape.properties[question.label[language]] = response.value;
+        else shape.properties[response.name] = response.value;
+      });
+      delete shape.properties.responses;
+
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
@@ -365,7 +375,7 @@ class FileService {
       } else {
         shape.geometry = {
           type: "Point",
-          coordinates: [record.attributes.clickedPosition.lon, record.attributes.clickedPosition.lat]
+          coordinates: [record.attributes.clickedPosition[0].lon, record.attributes.clickedPosition[0].lat]
         };
       }
       geojson.features.push(shape);
@@ -504,7 +514,7 @@ class FileService {
       doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
       doc.moveDown(1);
       // loop over responses
-      record.attributes.responses.forEach((response, i) => {
+      record.attributes.responses.forEach(response => {
         let responseToShow = "";
         // find the question in questions, if not found, add
         let question = questions.find(question => question.name === response.name);
@@ -668,4 +678,27 @@ const titles = {
     clickedPosition: "Localização reportada",
     layer: "Alerta"
   }
+};
+
+const getQuestions = templates => {
+  let questions = {};
+  templates.forEach(template => {
+    if (!questions[template.id]) questions[template.id] = [];
+    template.attributes.questions.forEach(question => {
+      questions[template.id].push({
+        ...question,
+        defaultLanguage: template.attributes.defaultLanguage
+      });
+      if (question.childQuestions && question.childQuestions.length > 0)
+        questions[template.id].push(
+          ...question.childQuestions.map(cQuestion => {
+            return {
+              ...cQuestion,
+              defaultLanguage: template.attributes.defaultLanguage
+            };
+          })
+        );
+    });
+  });
+  return questions;
 };
