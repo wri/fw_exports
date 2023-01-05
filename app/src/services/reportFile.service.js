@@ -116,7 +116,7 @@ class ReportFileService {
         files.forEach((file, i) => {
           const fileName = fileUrls[i];
           const [fileExtension] = fileName.split(".").slice(-1);
-          const filePath = `${answer.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
+          const filePath = `${answer.attributes.reportName}/${response.name}/attachment-${i}.${fileExtension}`;
 
           archive.append(file.data, { name: filePath });
           filePaths.push(filePath);
@@ -234,7 +234,7 @@ class ReportFileService {
           files.forEach((file, i) => {
             const fileName = fileUrls[i];
             const [fileExtension] = fileName.split(".").slice(-1);
-            const filePath = `${answer.attributes.reportName}/${response.name}/attachment.${fileExtension}`;
+            const filePath = `${answer.attributes.reportName}/${response.name}/attachment-${i}.${fileExtension}`;
 
             archive.append(file.data, { name: filePath });
 
