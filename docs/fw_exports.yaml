@@ -53,26 +53,43 @@ paths:
                         type: string
                       reportid:
                         type: string
+                    required:
+                      - templateid
+                      - reportid
                 language:
                   type: string
                 fileType:
                   type: string
+                  enum:
+                    - geojson
+                    - shp
+                    - fwbundle
+                    - csv
+                    - pdf
                 fields:
                   type: array
                   items:
                     type: string
                 email:
                   type: string
+              required:
+                - ids
+                - language
+                - fileType
+                - fields
+                - email
             examples:
               example-1:
                 value:
                   ids:
-                    - templateid: string
-                      reportid: string
-                  language: string
-                  fileType: string
+                    - templateid: 624eb2e03a38cf001b822d95
+                      reportid: 624eb2e03a38cf001b822d95
+                  language: en
+                  fileType: zip
                   fields:
-                    - string
+                    - name
+      tags:
+        - Reports
   /v3/exports/reports/exportAll:
     parameters: []
     post:
@@ -105,13 +122,34 @@ paths:
                   type: string
                 fileType:
                   type: string
+                  enum:
+                    - shp
+                    - pdf
+                    - fwbundle
+                    - geojson
+                    - csv
                 fields:
                   type: array
                   items:
                     type: string
                 email:
                   type: string
+              required:
+                - language
+                - fileType
+                - fields
+                - email
+            examples:
+              example-1:
+                value:
+                  language: en
+                  fileType: zip
+                  fields:
+                    - name
+                  email: email@email.com
         description: ''
+      tags:
+        - Reports
   '/v3/exports/reports/{id}':
     parameters:
       - schema:
@@ -120,7 +158,8 @@ paths:
         in: path
         required: true
     get:
-      summary: ''
+      description: Returns the url for a given id token received from a reports export request
+      summary: Get report export URL
       operationId: get-v3-exports-reports-id
       responses:
         '200':
@@ -134,7 +173,47 @@ paths:
                     type: string
         '401':
           $ref: '#/components/responses/Error'
-      description: Returns the url for a given id token received from a reports export request
+      tags:
+        - Reports
+  '/v3/exports/reports/{id}/images':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    post:
+      description: Returns the id token for the exports file of the report (answer) images
+      operationId: post-v3-exports-reports-id
+      summary: Export report images
+      responses:
+        '200':
+          description: OK - The export upload has started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Error'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fileType:
+                  type: string
+                  description: Can be the string 'zip' or 'pdf' which dictates the file type of the exports response
+                  enum:
+                    - zip
+                    - pdf
+              required:
+                - fileType
+      tags:
+        - Reports
   '/v3/exports/areas/exportOne/{areaId}':
     parameters:
       - schema:
@@ -168,6 +247,8 @@ paths:
       description: 'Exports an and associated images given its id as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
       requestBody:
         $ref: '#/components/requestBodies/Export-areas-request'
+      tags:
+        - Areas
   /v3/exports/areas/exportAll:
     parameters: []
     post:
@@ -192,6 +273,8 @@ paths:
       description: 'Exports all areas and associated images available to the user as either fwbundle or zipped csv, shp or geojson. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/areas/{id} endpoint is for the URL once the export has completed'
       requestBody:
         $ref: '#/components/requestBodies/Export-areas-request'
+      tags:
+        - Areas
   '/v3/exports/areas/{id}':
     parameters:
       - schema:
@@ -200,21 +283,64 @@ paths:
         in: path
         required: true
     get:
-      summary: ''
+      summary: Get Areas Export URL
       operationId: get-v3-exports-areas-id
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
+          $ref: '#/components/responses/Url'
         '401':
           $ref: '#/components/responses/Error'
       description: Returns the url for a given id token received from an areas export request
+      tags:
+        - Areas
+  /v3/exports/assignments/exportAll:
+    post:
+      summary: Export all assignments
+      operationId: post-v3-exports-assignments-exportAll
+      responses:
+        '200':
+          $ref: '#/components/responses/Id'
+        '401':
+          $ref: '#/components/responses/Error'
+      description: 'Exports all assignements and associated images the user can see as either fwbundle or zipped csv or geojson or shp. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/assignments/{id} endpoint is for the URL once the export has completed'
+      tags:
+        - Assignments
+      requestBody:
+        $ref: '#/components/requestBodies/Export-all-assignments'
+    parameters: []
+  /v3/exports/assignments/exportSome:
+    post:
+      summary: Export some assignments
+      operationId: post-v3-exports-assignments-exportSome
+      responses:
+        '200':
+          $ref: '#/components/responses/Id'
+        '401':
+          $ref: '#/components/responses/Error'
+      description: 'Exports a selection of assignements and associated images given its id as either fwbundle or zipped csv or geojson or shp. The "fields" array in the body determines the columns in any csv export. The response is an id to poll the GET /v3/exports/assignments/{id} endpoint is for the URL once the export has completed'
+      tags:
+        - Assignments
+      requestBody:
+        $ref: '#/components/requestBodies/Export-some-assignments-request'
+    parameters: []
+  '/v3/exports/assignments/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Get Assignments Export URL
+      operationId: get-v3-exports-assignments-id
+      responses:
+        '200':
+          $ref: '#/components/responses/Url'
+        '401':
+          $ref: '#/components/responses/Error'
+      description: Returns the url for a given id token received from an assignments export request
+      tags:
+        - Areas
 components:
   schemas: {}
   securitySchemes:
@@ -257,6 +383,24 @@ components:
               uptime:
                 type: number
           examples: {}
+    Id:
+      description: Id to poll endpoint
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: string
+    Url:
+      description: S3 bucket url
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: string
   requestBodies:
     Export-areas-request:
       content:
@@ -272,6 +416,13 @@ components:
                   type: string
               email:
                 type: string
+          examples:
+            example-1:
+              value:
+                fileType: csv
+                fields:
+                  - name
+                email: email@email.com
     Export-answers-request:
       content:
         application/json:
@@ -299,5 +450,53 @@ components:
                 type: string
             required:
               - ids
+    Export-some-assignments-request:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileType:
+                type: string
+                enum:
+                  - csv
+                  - fwbundle
+                  - shp
+                  - geojson
+                  - pdf
+              fields:
+                type: array
+                items:
+                  type: string
+              ids:
+                type: array
+                items:
+                  type: string
+          examples:
+            example-1:
+              value:
+                fileType: csv
+                fields:
+                  - name
+                ids:
+                  - 624eb2e03a38cf001b822d95
+    Export-all-assignments:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileType:
+                type: string
+              fields:
+                type: array
+                items:
+                  type: string
+          examples:
+            example-1:
+              value:
+                fileType: csv
+                fields:
+                  - name
 security:
   - Authorization: []

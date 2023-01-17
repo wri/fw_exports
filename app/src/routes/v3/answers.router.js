@@ -7,13 +7,15 @@
 
 const logger = require("logger").default;
 const Router = require("koa-router");
-const AnswerService = require("../../services/answers.service");
-const FileService = require("../../services/reportFile.service");
+const { AnswerService } = require("../../services/answers.service");
+const ReportFileService = require("../../services/reportFile.service");
+const { FileService } = require("../../services/file.service");
 import createShareableLink from "services/s3.service";
 const BucketURLModel = require("../../models/bucketURL.model");
 const { ObjectId } = require("mongoose").Types;
 const SparkpostService = require("../../services/sparkpost.service");
 const AdmZip = require("adm-zip");
+const axios = require("axios");
 
 const router = new Router({
   prefix: "/exports/reports"
@@ -69,6 +71,28 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
     const newURL = new BucketURLModel({ id: id, URL: error });
     newURL.save();
   }
+
+  let URL = "";
+  if (fileType === "shp") {
+    const zip = new AdmZip(file);
+    // read the zip file and upload to s3 bucket
+    URL = await createShareableLink({
+      extension: `.zip`,
+      body: zip.toBuffer()
+    });
+  } else {
+    // read the zip file and upload to s3 bucket
+    logger.info("Uploading to S3");
+    URL = await createShareableLink({
+      extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
+      body: file
+    });
+  }
+
+  if (email) SparkpostService.sendMail(email, URL);
+
+  const newURL = new BucketURLModel({ id: id, URL: URL });
+  newURL.save();
 };
 
 class AnswerRouter {
@@ -104,6 +128,89 @@ class AnswerRouter {
     ctx.body = { data: objId };
     ctx.status = 200;
   }
+
+  /**
+   * Exports the images of a given report
+   * @param {import("koa").Context & {params: {id?: string}}} ctx
+   */
+  static async exportImages(ctx) {
+    const answerId = ctx.params.id;
+    if (answerId === undefined) {
+      ctx.throw(400, "Answer id is required");
+    }
+
+    const fileType = ctx.request.body.fileType;
+    if (!["zip", "pdf"].includes(fileType)) {
+      ctx.throw(400, "File type must be pdf or zip");
+    }
+
+    const answer = await AnswerService.getAnswer({
+      reportid: answerId,
+      templateid: answerId
+    });
+    if (!answer) {
+      ctx.throw(404, "Report not found");
+    }
+    const responses = answer.attributes.responses;
+
+    const templateId = answer.attributes.report;
+    const template = await AnswerService.getTemplate(templateId);
+    const questions = template.attributes.questions;
+
+    // Flatten the array of questions so questions and child questions are at the same nesting and get their type
+    const flatQuestionTypes = questions.reduce((acc, question) => {
+      const childQuestionTypes = question.childQuestions?.map(q => q.type) ?? [];
+      return [...acc, question.type, ...childQuestionTypes];
+    }, []);
+
+    const isImageType = type => type === "blob";
+    const imageResponses = flatQuestionTypes
+      .reduce((acc, type, i) => {
+        if (isImageType(type)) {
+          return [...acc, i];
+        }
+        return acc;
+      }, [])
+      .map(i => responses[i]);
+
+    const imagePromises = [];
+    for (const imageResponse of imageResponses) {
+      const imageUrls = imageResponse.value ?? [];
+      for (const url of imageUrls) {
+        imagePromises.push(axios.get(url, { responseType: "arraybuffer" }).then(res => res.data));
+      }
+    }
+    const imageBuffers = await Promise.all(imagePromises);
+
+    let exportBuffer;
+    if (fileType === "zip") {
+      const imagesArchiveInput = imageBuffers.map((buffer, i) => ({
+        data: buffer,
+        name: "img-" + i
+      }));
+      exportBuffer = await FileService.createArchive(imagesArchiveInput);
+    }
+
+    if (fileType === "pdf") {
+      const imagesPdfInput = imageBuffers.map(buffer => ({
+        data: buffer
+      }));
+      exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
+    }
+
+    const id = new ObjectId();
+
+    createShareableLink({
+      extension: `.${fileType}`,
+      body: exportBuffer
+    }).then(URL => {
+      const URLModel = new BucketURLModel({ id: id, URL: URL });
+      URLModel.save();
+    });
+
+    ctx.body = { data: id };
+    ctx.status = 200;
+  }
 }
 
 const getAnswerSet = async (ctx, next) => {
@@ -111,8 +218,8 @@ const getAnswerSet = async (ctx, next) => {
   let answers = [];
   for await (const id of ids) {
     const answer = await AnswerService.getAnswer(id);
-    if (!answer[0]) ctx.throw(404, "Some answers don't exist");
-    else answers.push(answer[0]);
+    if (!answer) ctx.throw(404, "Some answers don't exist");
+    else answers.push(answer);
   }
   ctx.payload = answers;
   await next();
@@ -160,5 +267,6 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 router.get("/:id", isAuthenticatedMiddleware, AnswerRouter.getUrl);
 router.post("/exportSome", isAuthenticatedMiddleware, getAnswerSet, getTemplates, AnswerRouter.export);
 router.post("/exportAll", isAuthenticatedMiddleware, getAllAnswers, getTemplates, AnswerRouter.export);
+router.post("/:id/images", isAuthenticatedMiddleware, AnswerRouter.exportImages);
 
 export default router;
