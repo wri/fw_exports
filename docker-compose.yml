@@ -9,8 +9,8 @@ services:
       SUPPRESS_NO_CONFIG_WARNING: "true"
       LOGGER_LEVEL: debug
       PORT: 3000
-      AUTH_URL: https://staging-api.resourcewatch.org
-      FORMS_API_URL: https://dev-fw-api.globalforestwatch.org
+      AUTH_URL: https://api.resourcewatch.org
+      FORMS_API_URL: https://fw-api.globalforestwatch.org
       AREAS_API_URL: "https://dev-fw-api.globalforestwatch.org/v3/forest-watcher"
       ALERTS_API_URL: "https://staging-data-api.globalforestwatch.org"
       GEOSTORE_API_URL: https://staging-api.resourcewatch.org/v1
