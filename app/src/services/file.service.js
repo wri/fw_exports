@@ -45,12 +45,14 @@ export class FileService {
 
     doc.pipe(writeStreamBuffer);
 
-    for (const image of images) {
-      const page = doc.addPage();
-      const pageWidth = doc.page.width;
-      const pageHeight = doc.page.height;
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+
+    let page = doc;
+    images.forEach((image, i) => {
       page.image(image.data, { fit: [pageWidth * 0.8, pageHeight * 0.8] });
-    }
+      if (i !== images.length - 1) page = doc.addPage();
+    });
 
     doc.end();
 
