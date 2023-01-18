@@ -318,7 +318,7 @@ class ReportFileService {
       } else {
         shape.geometry = {
           type: "MultiPoint",
-          coordinates: [0, 0]
+          coordinates: [[0, 0]]
         };
       }
       shapeArray.features.push(shape);
