@@ -78,24 +78,28 @@ class ReportFileService {
         }
 
         const isFileResponse = ["blob", "audio"].includes(question.type);
-        if (!isFileResponse) {
+        if (!isFileResponse || answers.length > 20) {
           answer[question.label[language]] = response.value;
           continue;
         }
 
         const fileUrls = Array.isArray(response.value) ? response.value : [response.value];
 
-        const fileDownloadPromises = fileUrls.map(url =>
-          axios({
-            url: url,
-            responseType: "stream",
-            responseEncoding: "utf-8"
-          })
-        );
+        const fileDownloadPromises = fileUrls.map(url => {
+          console.log("url", url);
+          if (url)
+            return axios({
+              url: url,
+              responseType: "stream",
+              responseEncoding: "utf-8"
+            });
+          else return null;
+        });
         const files = await Promise.all(fileDownloadPromises);
 
         const filePaths = [];
         files.forEach((file, i) => {
+          if (!file) return;
           const fileName = fileUrls[i];
           const [fileExtension] = fileName.split(".").slice(-1);
           const filePath = `${answer.attributes.reportName}/${response.name}/attachment-${i}.${fileExtension}`;
@@ -200,7 +204,7 @@ class ReportFileService {
           child: null
         };
 
-        if (["blob", "audio"].includes(question.type)) {
+        if (["blob", "audio"].includes(question.type) && answers.length < 20) {
           const fileUrls = Array.isArray(response.value) ? response.value : [response.value];
 
           const fileDownloadPromises = fileUrls.map(url =>
@@ -230,7 +234,7 @@ class ReportFileService {
             });
           });
           exportAnswer.value = question.type === "blob" ? filePaths : filePaths[0];
-        }
+        } else exportAnswer.value = response.value;
 
         // check if the answer is a child
         // find an existing answer's question name inside this answer's question name
@@ -256,7 +260,7 @@ class ReportFileService {
     });
   }
 
-  static async createShape(payload, fields, templates) {
+  static async createShape(payload, fields) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
       incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
@@ -311,7 +315,12 @@ class ReportFileService {
           type: "MultiPoint",
           coordinates: [[record.attributes.clickedPosition[0].lon, record.attributes.clickedPosition[0].lat]]
         };
-      } else continue;
+      } else {
+        shape.geometry = {
+          type: "MultiPoint",
+          coordinates: [0, 0]
+        };
+      }
       shapeArray.features.push(shape);
     }
 
@@ -373,7 +382,7 @@ class ReportFileService {
         else shape.properties[response.name] = response.value;
       });
       delete shape.properties.responses;
-
+      console.log(record.attributes.clickedPosition, record.attributes.userPosition);
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {
@@ -383,10 +392,15 @@ class ReportFileService {
           type: "MultiPoint",
           coordinates
         };
-      } else {
+      } else if (record.attributes.clickedPosition && record.attributes.clickedPosition.length === 1) {
         shape.geometry = {
           type: "Point",
           coordinates: [record.attributes.clickedPosition[0].lon, record.attributes.clickedPosition[0].lat]
+        };
+      } else {
+        shape.geometry = {
+          type: "Point",
+          coordinates: [0, 0]
         };
       }
       geojson.features.push(shape);

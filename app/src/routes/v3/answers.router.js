@@ -28,19 +28,19 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
     // create file
     switch (fileType) {
       case "geojson":
-        file = await FileService.createGeojson(payload, templates);
+        file = await ReportFileService.createGeojson(payload, templates);
         break;
       case "shp":
-        file = await FileService.createShape(payload, fields, templates);
+        file = await ReportFileService.createShape(payload, fields, templates);
         break;
       case "csv":
-        file = await FileService.createCsv(payload, fields, templates, language);
+        file = await ReportFileService.createCsv(payload, fields, templates, language);
         break;
       case "fwbundle":
-        file = await FileService.createBundle(payload, templates);
+        file = await ReportFileService.createBundle(payload, templates);
         break;
       case "pdf":
-        file = await FileService.createPDF(payload, templates, fields, language);
+        file = await ReportFileService.createPDF(payload, templates, fields, language);
         break;
       default:
         break;
@@ -68,6 +68,7 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
     const newURL = new BucketURLModel({ id: id, URL: URL });
     newURL.save();
   } catch (error) {
+    console.log("URL", error);
     const newURL = new BucketURLModel({ id: id, URL: error });
     newURL.save();
   }

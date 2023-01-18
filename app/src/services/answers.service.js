@@ -10,7 +10,7 @@ export class AnswerService {
    * @returns The template object
    */
   static async getTemplate(id) {
-    logger.info(`Getting template with id ${id}`);
+    //logger.info(`Getting template with id ${id}`);
     try {
       const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
@@ -22,7 +22,7 @@ export class AnswerService {
         }
       });
       const template = response.data;
-      logger.info("Got template", template);
+      //logger.info("Got template", template);
       return template && template.data;
     } catch (e) {
       logger.error("Error while fetching template", e);
@@ -70,7 +70,7 @@ export class AnswerService {
         }
       });
       const answers = response.data;
-      logger.info("Got all answers", answers);
+      logger.info(`Got ${answers.data.length} answers`);
       return answers && answers.data;
     } catch (e) {
       logger.error("Error while fetching answers", e);
