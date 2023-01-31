@@ -148,7 +148,11 @@ class AnswerRouter {
 
     const imagePromises = [];
     for (const imageResponse of imageResponses) {
-      const imageUrls = imageResponse.value ?? [];
+      let imageUrls = imageResponse.value ?? [];
+      if (typeof imageUrls === "string") {
+        imageUrls = [imageUrls];
+      }
+
       for (const url of imageUrls) {
         imagePromises.push(axios.get(url, { responseType: "arraybuffer" }).then(res => res.data));
       }
