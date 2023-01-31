@@ -51,18 +51,22 @@ class ReportFileService {
 
       // Assumes all elements share the same type
       const isArrayCoords = Array.isArray(coords[0]);
-      const pairStrings = coords.map(coord => (isArrayCoords ? coord.join(" ") : `${coord.lon} ${coord.lat}`));
-
+      const pairStrings = coords.map(coord => (isArrayCoords ? coord.join(" ") : `${coord.lat} ${coord.lon}`));
       if (coords.length === 1) return `POINT (${pairStrings[0]})`;
 
       const pairBracketedStrings = pairStrings.map(p => `(${p})`);
       return `MULTIPOINT (${pairBracketedStrings.join(", ")})`;
     };
 
+    const stringifyUserPosition = coords => {
+      if (coords.length === 0) return "";
+      return `POINT (${coords.join(", ")})`;
+    };
+
     for await (const answer of answers) {
       Object.assign(answer, answer.attributes);
       answer.clickedPosition = stringifyCoords(answer.attributes.clickedPosition);
-      answer.userPosition = stringifyCoords(answer.attributes.userPosition);
+      answer.userPosition = stringifyUserPosition(answer.attributes.userPosition);
 
       const templateId = answer.attributes.report;
       const template = templates.find(t => t.id === templateId);
