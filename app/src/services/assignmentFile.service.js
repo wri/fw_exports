@@ -214,8 +214,11 @@ class AssignementsFileService {
             geojson.features.forEach((feature, index) => {
               let featureName = "feature" + index.toString();
               // turn coordinates into simpler array
-              let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
-              let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
+              let wkt = "";
+              if (Array.isArray(feature.geometry.coordinates[0])) {
+                let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+                wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
+              } else wkt = `${feature.geometry.type.toUpperCase()}((${feature.geometry.coordinates.join(",")}))`;
               row[featureName] = wkt;
               if (!fields.includes(featureName)) fields.push(featureName);
             });
@@ -227,8 +230,11 @@ class AssignementsFileService {
           geojson.features.forEach((feature, index) => {
             let featureName = "feature" + index.toString();
             // turn coordinates into simpler array
-            let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
-            let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
+            let wkt = "";
+            if (Array.isArray(feature.geometry.coordinates[0])) {
+              let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+              wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
+            } else wkt = `${feature.geometry.type.toUpperCase()}((${feature.geometry.coordinates.join(",")}))`;
             row[featureName] = wkt;
             if (!fields.includes(featureName)) fields.push(featureName);
           });
