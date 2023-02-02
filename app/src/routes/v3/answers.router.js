@@ -24,53 +24,25 @@ const router = new Router({
 const exportFunction = async (id, payload, fields, templates, language, fileType, email) => {
   let file = "";
 
-  try {
-    // create file
-    switch (fileType) {
-      case "geojson":
-        file = await ReportFileService.createGeojson(payload, templates);
-        break;
-      case "shp":
-        file = await ReportFileService.createShape(payload, fields, templates);
-        break;
-      case "csv":
-        file = await ReportFileService.createCsv(payload, fields, templates, language);
-        break;
-      case "fwbundle":
-        file = await ReportFileService.createBundle(payload, templates);
-        break;
-      case "pdf":
-        file = await ReportFileService.createPDF(payload, templates, fields, language);
-        break;
-      default:
-        break;
-    }
-
-    let URL = "";
-    if (fileType === "shp") {
-      const zip = new AdmZip(file);
-      // read the zip file and upload to s3 bucket
-      URL = await createShareableLink({
-        extension: `.zip`, // `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-        body: zip.toBuffer()
-      });
-    } else {
-      // read the zip file and upload to s3 bucket
-      logger.info("Uploading to S3");
-      URL = await createShareableLink({
-        extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-        body: file
-      });
-    }
-
-    if (email) SparkpostService.sendMail(email, URL);
-
-    const newURL = new BucketURLModel({ id: id, URL: URL });
-    newURL.save();
-  } catch (error) {
-    console.log("URL", error);
-    const newURL = new BucketURLModel({ id: id, URL: error });
-    newURL.save();
+  // create file
+  switch (fileType) {
+    case "geojson":
+      file = await ReportFileService.createGeojson(payload);
+      break;
+    case "shp":
+      file = await ReportFileService.createShape(payload, fields);
+      break;
+    case "csv":
+      file = await ReportFileService.createCsv(payload, fields, templates, language);
+      break;
+    case "fwbundle":
+      file = await ReportFileService.createBundle(payload, templates);
+      break;
+    case "pdf":
+      file = await ReportFileService.createPDF(payload, templates, fields, language);
+      break;
+    default:
+      break;
   }
 
   let URL = "";
@@ -182,17 +154,21 @@ class AnswerRouter {
       }
 
       for (const url of imageUrls) {
-        imagePromises.push(axios.get(url, { responseType: "arraybuffer" }).then(res => res.data));
+        imagePromises.push(axios.get(url, { responseType: "arraybuffer" }).then(res => ({ data: res.data, url })));
       }
     }
     const imageBuffers = await Promise.all(imagePromises);
 
     let exportBuffer;
     if (fileType === "zip") {
-      const imagesArchiveInput = imageBuffers.map((buffer, i) => ({
-        data: buffer,
-        name: "img-" + i
-      }));
+      const imagesArchiveInput = imageBuffers.map((buffer, i) => {
+        // This gets the extention from the AWS S3 URL and may not work if storage provider is changed
+        const fileExt = buffer.url.split("/").pop().split(".").pop();
+        return {
+          data: buffer.data,
+          name: `img-${i}.${fileExt}`
+        };
+      });
       exportBuffer = await FileService.createArchive(imagesArchiveInput);
     }
 
