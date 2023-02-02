@@ -174,7 +174,7 @@ class AnswerRouter {
 
     if (fileType === "pdf") {
       const imagesPdfInput = imageBuffers.map(buffer => ({
-        data: buffer
+        data: buffer.data
       }));
       exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
     }
