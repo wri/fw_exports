@@ -10,7 +10,7 @@ services:
       LOGGER_LEVEL: debug
       PORT: 3000
       AUTH_URL: https://staging-api.resourcewatch.org
-      CORE_API_URL: https://staging-fw-api.globalforestwatch.org/v3/gfw
+      CORE_API_URL: https://dev-fw-api.globalforestwatch.org/v3/gfw
       ALERTS_API_URL: "https://staging-data-api.globalforestwatch.org"
       GEOSTORE_API_URL: https://staging-api.resourcewatch.org/v1
       GFW_DATA_API_KEY: ${gfw_data_api_key}
