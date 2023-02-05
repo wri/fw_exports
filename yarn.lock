@@ -5277,6 +5277,21 @@
     "import-local" "^3.0.2"
     "jest-cli" "^27.5.1"
 
+"jpeg-autorotate@^8.0.1":
+  "integrity" "sha512-LAylGB3K3YIQymeqzzE+I1cM0O2R4m9I+EXniklFRpNeQ6H343VQLX90H597JOWYc1JlmNlJb8loTZ+SIsc4QQ=="
+  "resolved" "https://registry.npmjs.org/jpeg-autorotate/-/jpeg-autorotate-8.0.1.tgz"
+  "version" "8.0.1"
+  dependencies:
+    "glob" "^7.2.0"
+    "jpeg-js" "^0.4.3"
+    "piexifjs" "^1.0.6"
+    "yargs-parser" "^20.2.9"
+
+"jpeg-js@^0.4.3":
+  "integrity" "sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg=="
+  "resolved" "https://registry.npmjs.org/jpeg-js/-/jpeg-js-0.4.4.tgz"
+  "version" "0.4.4"
+
 "js-sdsl@^4.1.4":
   "integrity" "sha512-Y2/yD55y5jteOAmY50JbUZYwk3CP3wnLPEZnlR1w9oKhITrBEtAxwuWKebFf8hMrPMgbYwFoWK/lH2sBkErELw=="
   "resolved" "https://registry.npmjs.org/js-sdsl/-/js-sdsl-4.1.4.tgz"
@@ -6163,6 +6178,11 @@
   "integrity" "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA=="
   "resolved" "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz"
   "version" "2.3.1"
+
+"piexifjs@^1.0.6":
+  "integrity" "sha512-0wVyH0cKohzBQ5Gi2V1BuxYpxWfxF3cSqfFXfPIpl5tl9XLS5z4ogqhUCD20AbHi0h9aJkqXNJnkVev6gwh2ag=="
+  "resolved" "https://registry.npmjs.org/piexifjs/-/piexifjs-1.0.6.tgz"
+  "version" "1.0.6"
 
 "pify@^4.0.1":
   "integrity" "sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g=="
@@ -7507,7 +7527,7 @@
   "resolved" "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz"
   "version" "4.0.0"
 
-"yargs-parser@^20.2.2", "yargs-parser@20.x":
+"yargs-parser@^20.2.2", "yargs-parser@^20.2.9", "yargs-parser@20.x":
   "integrity" "sha512-y11nGElTIV+CT3Zv9t7VKl+Q3hTQoT9a1Qzezhhl6Rp21gJ/IVTW7Z3y9EWXhuUBC2Shnf+DX0antecpAwSP8w=="
   "resolved" "https://registry.npmjs.org/yargs-parser/-/yargs-parser-20.2.9.tgz"
   "version" "20.2.9"
