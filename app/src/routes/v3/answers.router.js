@@ -16,6 +16,7 @@ const { ObjectId } = require("mongoose").Types;
 const SparkpostService = require("../../services/sparkpost.service");
 const AdmZip = require("adm-zip");
 const axios = require("axios");
+const jo = require("jpeg-autorotate");
 
 const router = new Router({
   prefix: "/exports/reports"
@@ -173,9 +174,22 @@ class AnswerRouter {
     }
 
     if (fileType === "pdf") {
-      const imagesPdfInput = imageBuffers.map(buffer => ({
-        data: buffer.data
-      }));
+      const imagesPdfInputPromises = imageBuffers.map(async buffer => {
+        const fileExt = buffer.url.split("/").pop().split(".").pop();
+
+        if (fileExt === "jpeg" || fileExt === "jpg") {
+          try {
+            buffer.data = await jo.rotate(buffer.data).then(res => res.buffer);
+          } catch (e) {
+            logger.error("Could not rotate image", e.message);
+          }
+        }
+
+        return {
+          data: buffer.data
+        };
+      });
+      const imagesPdfInput = await Promise.all(imagesPdfInputPromises);
       exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
     }
 
