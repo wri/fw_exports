@@ -180,7 +180,7 @@ class AnswerRouter {
 
         if (fileExt === "jpeg" || fileExt === "jpg") {
           try {
-            // buffer.data = await jo.rotate(buffer.data).then(res => res.buffer);
+            buffer.data = await jo.rotate(buffer.data).then(res => res.buffer);
           } catch (e) {
             logger.error("Could not rotate image", e.message);
           }
