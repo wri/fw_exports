@@ -106,8 +106,9 @@ class AnswerRouter {
   /**
    * Exports the images of a given report
    * @param {import("koa").Context & {params: {id?: string}}} ctx
+   * @param {ObjectId} objectId Id of the export object
    */
-  static async exportImages(ctx) {
+  static async exportImagesHandler(ctx, objectId) {
     const answerId = ctx.params.id;
     if (answerId === undefined) {
       ctx.throw(400, "Answer id is required");
@@ -193,13 +194,22 @@ class AnswerRouter {
       exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
     }
 
-    const id = new ObjectId();
+    const id = objectId;
 
     createShareableLink({
       extension: `.${fileType}`,
       body: exportBuffer
     }).then(URL => {
       const URLModel = new BucketURLModel({ id: id, URL: URL });
+      URLModel.save();
+    });
+  }
+
+  static async exportImages(ctx) {
+    const id = new ObjectId();
+
+    AnswerRouter.exportImagesHandler(ctx, id).catch(e => {
+      const URLModel = new BucketURLModel({ id: id, URL: e.message });
       URLModel.save();
     });
 
