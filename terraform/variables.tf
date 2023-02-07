@@ -29,7 +29,7 @@ variable "desired_count" {
 }
 variable "fargate_cpu" {
   type    = number
-  default = 256
+  default = 512
 }
 variable "fargate_memory" {
   type    = number
