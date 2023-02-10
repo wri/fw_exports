@@ -1,5 +1,5 @@
 variable "project_prefix" {
-  type = string
+  type    = string
   default = "fw-exports"
 }
 
@@ -29,11 +29,11 @@ variable "desired_count" {
 }
 variable "fargate_cpu" {
   type    = number
-  default = 512
+  default = 1024
 }
 variable "fargate_memory" {
   type    = number
-  default = 1024
+  default = 2048
 }
 variable "auto_scaling_cooldown" {
   type    = number
@@ -58,11 +58,11 @@ variable "healthcheck_path" {
   type = string
 }
 variable "healthcheck_sns_emails" {
-  type    = list(string)
+  type = list(string)
 }
 
 variable "s3_bucket" {
-  type = string
+  type    = string
   default = "forest-watcher-files"
 }
 variable "s3_access_key_id" {

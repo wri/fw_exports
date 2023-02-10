@@ -175,9 +175,11 @@ class AnswerRouter {
     }
 
     if (fileType === "pdf") {
-      const imagesPdfInputPromises = imageBuffers.map(async buffer => {
+      const imagesPdfInput = [];
+      for (const buffer of imageBuffers) {
         const fileExt = buffer.url.split("/").pop().split(".").pop();
 
+        // Rotate images if they are in the wrong orientation (only for jpeg) as pdfgen does not do this
         if (fileExt === "jpeg" || fileExt === "jpg") {
           try {
             buffer.data = await jo.rotate(buffer.data).then(res => res.buffer);
@@ -185,12 +187,8 @@ class AnswerRouter {
             logger.error("Could not rotate image", e.message);
           }
         }
-
-        return {
-          data: buffer.data
-        };
-      });
-      const imagesPdfInput = await Promise.all(imagesPdfInputPromises);
+        imagesPdfInput.push({ data: buffer.data });
+      }
       exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
     }
 
