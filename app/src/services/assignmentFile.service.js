@@ -299,7 +299,7 @@ class AssignementsFileService {
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [location.lat, location.lon]
+              coordinates: [location.lon, location.lat]
             },
             properties: {
               id: record.id,
