@@ -29,7 +29,7 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
     // create file
     switch (fileType) {
       case "geojson":
-        file = await ReportFileService.createGeojson(payload);
+        file = await ReportFileService.createGeojson(payload, templates);
         break;
       case "shp":
         file = await ReportFileService.createShape(payload, fields);
