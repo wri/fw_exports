@@ -123,7 +123,6 @@ class AssignementsFileService {
     // loop over records
     for await (const record of payload) {
       let geojson;
-      console.log(record, record.attributes.geostore, record.attributes.location);
       if (record.attributes.geostore) {
         // pull down geojson info
         if (!record.attributes.geostore.geojson) {
