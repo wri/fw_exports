@@ -183,6 +183,8 @@ class ReportFileService {
       bundle.templates[template.id] = template;
     });
 
+    let questions = getQuestions(templates);
+
     // loop over records
     for await (const answer of answers) {
       let newRecord = {
@@ -201,13 +203,12 @@ class ReportFileService {
 
       // loop over answers
       for await (const response of answer.attributes.responses) {
-        const question = template.attributes.questions.find(q => q.name === response.name);
+        let question = questions[answer.attributes.report].find(question => question.name === response.name);
         let exportAnswer = {
           value: response.value,
           questionName: response.name,
           child: null
         };
-
         if (["blob", "audio"].includes(question.type) && answers.length < 20) {
           const fileUrls = Array.isArray(response.value) ? response.value : [response.value];
 
@@ -386,7 +387,6 @@ class ReportFileService {
         else shape.properties[response.name] = response.value;
       });
       delete shape.properties.responses;
-      console.log(record.attributes.clickedPosition, record.attributes.userPosition);
       if (record.attributes.clickedPosition && record.attributes.clickedPosition.length > 1) {
         let coordinates = [];
         record.attributes.clickedPosition.forEach(position => {

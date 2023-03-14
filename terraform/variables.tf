@@ -1,5 +1,5 @@
 variable "project_prefix" {
-  type = string
+  type    = string
   default = "fw-exports"
 }
 
@@ -58,11 +58,11 @@ variable "healthcheck_path" {
   type = string
 }
 variable "healthcheck_sns_emails" {
-  type    = list(string)
+  type = list(string)
 }
 
 variable "s3_bucket" {
-  type = string
+  type    = string
   default = "forest-watcher-files"
 }
 variable "s3_access_key_id" {
