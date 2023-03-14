@@ -23,50 +23,56 @@ const router = new Router({
 });
 
 const exportFunction = async (id, payload, fields, templates, language, fileType, email) => {
-  let file = "";
+  try {
+    let file = "";
 
-  // create file
-  switch (fileType) {
-    case "geojson":
-      file = await ReportFileService.createGeojson(payload);
-      break;
-    case "shp":
-      file = await ReportFileService.createShape(payload, fields);
-      break;
-    case "csv":
-      file = await ReportFileService.createCsv(payload, fields, templates, language);
-      break;
-    case "fwbundle":
-      file = await ReportFileService.createBundle(payload, templates);
-      break;
-    case "pdf":
-      file = await ReportFileService.createPDF(payload, templates, fields, language);
-      break;
-    default:
-      break;
+    // create file
+    switch (fileType) {
+      case "geojson":
+        file = await ReportFileService.createGeojson(payload, templates);
+        break;
+      case "shp":
+        file = await ReportFileService.createShape(payload, fields);
+        break;
+      case "csv":
+        file = await ReportFileService.createCsv(payload, fields, templates, language);
+        break;
+      case "fwbundle":
+        file = await ReportFileService.createBundle(payload, templates);
+        break;
+      case "pdf":
+        file = await ReportFileService.createPDF(payload, templates, fields, language);
+        break;
+      default:
+        break;
+    }
+
+    let URL = "";
+    if (fileType === "shp") {
+      const zip = new AdmZip(file);
+      // read the zip file and upload to s3 bucket
+      URL = await createShareableLink({
+        extension: `.zip`,
+        body: zip.toBuffer()
+      });
+    } else {
+      // read the zip file and upload to s3 bucket
+      logger.info("Uploading to S3");
+      URL = await createShareableLink({
+        extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
+        body: file
+      });
+    }
+
+    if (email) SparkpostService.sendMail(email, URL);
+
+    const newURL = new BucketURLModel({ id: id, URL: URL });
+    newURL.save();
+  } catch (error) {
+    logger.error(error);
+    const newURL = new BucketURLModel({ id: id, URL: error });
+    newURL.save();
   }
-
-  let URL = "";
-  if (fileType === "shp") {
-    const zip = new AdmZip(file);
-    // read the zip file and upload to s3 bucket
-    URL = await createShareableLink({
-      extension: `.zip`,
-      body: zip.toBuffer()
-    });
-  } else {
-    // read the zip file and upload to s3 bucket
-    logger.info("Uploading to S3");
-    URL = await createShareableLink({
-      extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-      body: file
-    });
-  }
-
-  if (email) SparkpostService.sendMail(email, URL);
-
-  const newURL = new BucketURLModel({ id: id, URL: URL });
-  newURL.save();
 };
 
 class AnswerRouter {
@@ -106,8 +112,9 @@ class AnswerRouter {
   /**
    * Exports the images of a given report
    * @param {import("koa").Context & {params: {id?: string}}} ctx
+   * @param {ObjectId} objectId Id of the export object
    */
-  static async exportImages(ctx) {
+  static async exportImagesHandler(ctx, objectId) {
     const answerId = ctx.params.id;
     if (answerId === undefined) {
       ctx.throw(400, "Answer id is required");
@@ -174,9 +181,11 @@ class AnswerRouter {
     }
 
     if (fileType === "pdf") {
-      const imagesPdfInputPromises = imageBuffers.map(async buffer => {
+      const imagesPdfInput = [];
+      for (const buffer of imageBuffers) {
         const fileExt = buffer.url.split("/").pop().split(".").pop();
 
+        // Rotate images if they are in the wrong orientation (only for jpeg) as pdfgen does not do this
         if (fileExt === "jpeg" || fileExt === "jpg") {
           try {
             buffer.data = await jo.rotate(buffer.data).then(res => res.buffer);
@@ -184,22 +193,27 @@ class AnswerRouter {
             logger.error("Could not rotate image", e.message);
           }
         }
-
-        return {
-          data: buffer.data
-        };
-      });
-      const imagesPdfInput = await Promise.all(imagesPdfInputPromises);
+        imagesPdfInput.push({ data: buffer.data });
+      }
       exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
     }
 
-    const id = new ObjectId();
+    const id = objectId;
 
     createShareableLink({
       extension: `.${fileType}`,
       body: exportBuffer
     }).then(URL => {
       const URLModel = new BucketURLModel({ id: id, URL: URL });
+      URLModel.save();
+    });
+  }
+
+  static async exportImages(ctx) {
+    const id = new ObjectId();
+
+    AnswerRouter.exportImagesHandler(ctx, id).catch(e => {
+      const URLModel = new BucketURLModel({ id: id, URL: e.message });
       URLModel.save();
     });
 
