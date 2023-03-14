@@ -36,7 +36,6 @@ const mongoURL =
   "?authSource=admin";
 
 const onDbReady = err => {
-  logger.info(`connecting to db ${mongoURL}`);
   if (err) {
     logger.error(err);
     throw new Error(err);
