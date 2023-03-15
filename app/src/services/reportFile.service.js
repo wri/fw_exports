@@ -212,14 +212,16 @@ class ReportFileService {
         if (["blob", "audio"].includes(question.type) && answers.length < 20) {
           const fileUrls = Array.isArray(response.value) ? response.value : [response.value];
 
-          const fileDownloadPromises = fileUrls.map(url =>
-            axios({
-              url: url,
-              responseType: "stream",
-              responseEncoding: "utf-8"
-            })
-          );
-          const files = await Promise.all(fileDownloadPromises);
+          const fileDownloadPromises = fileUrls.map(url => {
+            if (url)
+              return axios({
+                url: url,
+                responseType: "stream",
+                responseEncoding: "utf-8"
+              });
+            else return null;
+          });
+          const files = await Promise.all(fileDownloadPromises.filter(n => n));
 
           const filePaths = [];
           files.forEach((file, i) => {
