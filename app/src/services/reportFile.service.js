@@ -98,7 +98,7 @@ class ReportFileService {
             });
           else return null;
         });
-        const files = await Promise.all(fileDownloadPromises);
+        const files = await Promise.all(fileDownloadPromises.filter(n => n));
 
         const filePaths = [];
         files.forEach((file, i) => {
@@ -220,7 +220,7 @@ class ReportFileService {
               });
             else return null;
           });
-          const files = await Promise.all(fileDownloadPromises);
+          const files = await Promise.all(fileDownloadPromises.filter(n => n));
 
           const filePaths = [];
           files.forEach((file, i) => {
