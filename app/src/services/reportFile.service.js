@@ -220,7 +220,7 @@ class ReportFileService {
               });
             else return null;
           });
-          const files = await Promise.all(fileDownloadPromises.filter(n => n));
+          const files = await Promise.all(fileDownloadPromises);
 
           const filePaths = [];
           files.forEach((file, i) => {
