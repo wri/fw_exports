@@ -90,7 +90,6 @@ class ReportFileService {
         const fileUrls = Array.isArray(response.value) ? response.value : [response.value];
 
         const fileDownloadPromises = fileUrls.map(url => {
-          console.log("url", url);
           if (url)
             return axios({
               url: url,
