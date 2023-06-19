@@ -198,7 +198,7 @@ class ReportFileService {
         date: answer.attributes.createdAt,
         answers: []
       };
-      const template = templates.find(t => answer.attributes.report.toString() === t.id.toString());
+      //const template = templates.find(t => answer.attributes.report.toString() === t.id.toString());
 
       // loop over answers
       for await (const response of answer.attributes.responses) {
@@ -495,8 +495,11 @@ class ReportFileService {
       const doc = new PDFDocument({ size: "A4" });
       doc.pipe(docStreamBuffer);
 
+      doc.registerFont("Regular", "./app/src/services/font/NotoSansCJKjp-Regular.otf");
+      doc.registerFont("Bold", "./app/src/services/font/NotoSansCJKjp-Bold.otf");
+
       doc.fontSize(14).text("Monitoring Report", 50, 80);
-      doc.font("Helvetica-Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
+      doc.font("Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
 
       filteredFields.forEach((field, i) => {
         if (images?.[field]?.data)
@@ -506,7 +509,7 @@ class ReportFileService {
         else if (titles.en[field]) fieldName = titles.en[field];
         else fieldName = field;
         doc
-          .font("Helvetica")
+          .font("Regular")
           .fontSize(11)
           .text(fieldName.toUpperCase(), 80 + 250 * (i % 2), 150 + ((i - (i % 2)) / 2) * 50);
         let textToPrint = "";
@@ -556,17 +559,17 @@ class ReportFileService {
         } else responseToShow = response.value;
 
         doc
-          .font("Helvetica-Bold")
+          .font("Bold")
           .fontSize(11)
           .text(question.label[language] || question.label[question.defaultLanguage], 50, doc.y, { underline: false }); //, lineY + 15 + 50 * i);
         doc.moveDown(0.5);
         if (files.length > 0)
           files.forEach(file => {
-            doc.font("Helvetica").fontSize(11).text(file, 50, doc.y, { link: file, underline: true }); //, lineY + 30 + 50 * i);
+            doc.font("Regular").fontSize(11).text(file, 50, doc.y, { link: file, underline: true }); //, lineY + 30 + 50 * i);
             doc.moveDown(1);
           });
         else {
-          doc.font("Helvetica").fontSize(11).text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
+          doc.font("Regular").fontSize(11).text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
           doc.moveDown(1);
         }
       });
@@ -575,7 +578,7 @@ class ReportFileService {
         let fieldName = "";
         if (titles[language].clickedPosition) fieldName = titles[language].clickedPosition;
         else fieldName = "Clicked Position";
-        doc.font("Helvetica").fontSize(11).text(fieldName.toUpperCase(), 50, doc.y); //, 270 + 50 * record.attributes.responses.length);
+        doc.font("Regular").fontSize(11).text(fieldName.toUpperCase(), 50, doc.y); //, 270 + 50 * record.attributes.responses.length);
         let textToPrint = "";
         if (Array.isArray(record.attributes.clickedPosition)) {
           // if it's coordinates
