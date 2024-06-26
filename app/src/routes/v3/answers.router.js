@@ -160,6 +160,12 @@ class AnswerRouter {
       if (typeof imageUrls === "string") {
         imageUrls = [imageUrls];
       }
+      else if (Array.isArray(imageUrls)) {
+        imageUrls = imageUrls.map(url => typeof url === 'object' ? url.url : url)
+      }
+      else if (typeof imageUrls === 'object') {
+        imageUrls = [imageUrls.url]
+      }
 
       for (const url of imageUrls) {
         const urlToDownload = typeof url === 'object' ? url.url : url;
