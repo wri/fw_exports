@@ -162,7 +162,8 @@ class AnswerRouter {
       }
 
       for (const url of imageUrls) {
-        imagePromises.push(axios.get(url, { responseType: "arraybuffer" }).then(res => ({ data: res.data, url })));
+        const urlToDownload = typeof url === 'object' ? url.url : url;
+        imagePromises.push(axios.get(urlToDownload, { responseType: "arraybuffer" }).then(res => ({ data: res.data, url: urlToDownload })));
       }
     }
     const imageBuffers = await Promise.all(imagePromises);
