@@ -92,7 +92,7 @@ class ReportFileService {
         const fileDownloadPromises = fileUrls.map(url => {
           if (url)
             return axios({
-              url: url,
+              url: typeof url === 'object' ? url.url : url,
               responseType: "stream",
               responseEncoding: "utf-8"
             });
@@ -214,7 +214,7 @@ class ReportFileService {
           const fileDownloadPromises = fileUrls.map(url => {
             if (url)
               return axios({
-                url: url,
+                url: typeof url === 'object' ? url.url : url,
                 responseType: "stream",
                 responseEncoding: "utf-8"
               });
@@ -555,7 +555,7 @@ class ReportFileService {
         // check if the answer is a file
         if (["blob", "audio"].includes(question.type)) {
           files = Array.isArray(response.value) ? response.value : [response.value];
-          responseToShow = `File(s) found at: \n${files.join("\n")}`;
+          responseToShow = `File(s) found at: \n${files.map(file => typeof file === 'object' ? file.url : url).join("\n")}`;
         } else responseToShow = response.value;
 
         doc
