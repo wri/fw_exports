@@ -552,6 +552,9 @@ class ReportFileService {
           questions.push(question);
         }
         let files = [];
+
+        console.log(response)
+
         // check if the answer is a file
         if (["blob", "audio"].includes(question.type)) {
           files = Array.isArray(response.value) ? response.value : [response.value];
@@ -565,7 +568,7 @@ class ReportFileService {
         doc.moveDown(0.5);
         if (files.length > 0)
           files.forEach(file => {
-            doc.font("Regular").fontSize(11).text(file, 50, doc.y, { link: file, underline: true }); //, lineY + 30 + 50 * i);
+            doc.font("Regular").fontSize(11).text(typeof file === 'object' ? file.url : file, 50, doc.y, { link: typeof file === 'object' ? file.url : url, underline: true }); //, lineY + 30 + 50 * i);
             doc.moveDown(1);
           });
         else {
