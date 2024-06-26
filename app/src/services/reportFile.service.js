@@ -553,8 +553,6 @@ class ReportFileService {
         }
         let files = [];
 
-        console.log(response)
-
         // check if the answer is a file
         if (["blob", "audio"].includes(question.type)) {
           files = Array.isArray(response.value) ? response.value : [response.value];
