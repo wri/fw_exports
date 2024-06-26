@@ -188,11 +188,9 @@ class AnswerRouter {
     }
 
     if (fileType === "pdf") {
-      console.log("PDF", imageBuffers.length)
       const imagesPdfInput = [];
       for (const buffer of imageBuffers) {
         const fileExt = buffer.url.split("/").pop().split(".").pop().split("?")[0];
-        console.log("fileExt", fileExt)
         // Rotate images if they are in the wrong orientation (only for jpeg) as pdfgen does not do this
         if (fileExt === "jpeg" || fileExt === "jpg") {
           try {
