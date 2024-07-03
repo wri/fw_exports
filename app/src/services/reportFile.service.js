@@ -556,7 +556,7 @@ class ReportFileService {
         // check if the answer is a file
         if (["blob", "audio"].includes(question.type)) {
           files = Array.isArray(response.value) ? response.value : [response.value];
-          responseToShow = `File(s) found at: \n${files.map(file => typeof file === 'object' ? file.url : url).join("\n")}`;
+          responseToShow = `File(s) found at: \n${files.map(file => typeof file === 'object' ? file.url : file).join("\n")}`;
         } else responseToShow = response.value;
 
         doc
@@ -566,7 +566,7 @@ class ReportFileService {
         doc.moveDown(0.5);
         if (files.length > 0)
           files.forEach(file => {
-            doc.font("Regular").fontSize(11).text(typeof file === 'object' ? file.url : file, 50, doc.y, { link: typeof file === 'object' ? file.url : url, underline: true }); //, lineY + 30 + 50 * i);
+            doc.font("Regular").fontSize(11).text(typeof file === 'object' ? file.url : file, 50, doc.y, { link: typeof file === 'object' ? file.url : file, underline: true }); //, lineY + 30 + 50 * i);
             doc.moveDown(1);
           });
         else {
