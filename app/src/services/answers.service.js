@@ -58,10 +58,10 @@ export class AnswerService {
   }
 
   /**
-     * Returns the answer for a given id
-     * @param {{templateid: string, reportid: string}} params The id for the answer to fetch as well as the parent report of the answer
-     * @returns The answer object with the id
-     */
+   * Returns the answer for a given id
+   * @param {{templateid: string, reportid: string}} params The id for the answer to fetch as well as the parent report of the answer
+   * @returns The answer object with the id
+   */
   static async getAnswerWithUrl(params) {
     const { templateid, reportid } = params;
     logger.info(`Getting answer with id ${reportid} of template id ${templateid}`);
