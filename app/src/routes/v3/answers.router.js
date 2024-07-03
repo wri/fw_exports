@@ -159,17 +159,19 @@ class AnswerRouter {
       let imageUrls = imageResponse.value ?? [];
       if (typeof imageUrls === "string") {
         imageUrls = [imageUrls];
-      }
-      else if (Array.isArray(imageUrls)) {
-        imageUrls = imageUrls.map(url => typeof url === 'object' ? url.url : url)
-      }
-      else if (typeof imageUrls === 'object') {
-        imageUrls = [imageUrls.url]
+      } else if (Array.isArray(imageUrls)) {
+        imageUrls = imageUrls.map(url => (typeof url === "object" ? url.url : url));
+      } else if (typeof imageUrls === "object") {
+        imageUrls = [imageUrls.url];
       }
 
       for (const url of imageUrls) {
-        const urlToDownload = typeof url === 'object' ? url.url : url;
-        imagePromises.push(axios.get(urlToDownload, { responseType: "arraybuffer" }).then(res => ({ data: res.data, url: urlToDownload })));
+        const urlToDownload = typeof url === "object" ? url.url : url;
+        imagePromises.push(
+          axios
+            .get(urlToDownload, { responseType: "arraybuffer" })
+            .then(res => ({ data: res.data, url: urlToDownload }))
+        );
       }
     }
     const imageBuffers = await Promise.all(imagePromises);
