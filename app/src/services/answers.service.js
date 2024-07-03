@@ -57,6 +57,33 @@ export class AnswerService {
     }
   }
 
+  /**
+   * Returns the answer for a given id
+   * @param {{templateid: string, reportid: string}} params The id for the answer to fetch as well as the parent report of the answer
+   * @returns The answer object with the id
+   */
+  static async getAnswerWithUrl(params) {
+    const { templateid, reportid } = params;
+    logger.info(`Getting answer with id ${reportid} of template id ${templateid}`);
+    try {
+      const baseURL = config.get("coreAPI.url");
+      const response = await axios.default({
+        baseURL,
+        url: `/templates/${templateid}/answers/imageExports/${reportid}`,
+        method: "GET",
+        headers: {
+          authorization: loggedInUserService.token
+        }
+      });
+      const answer = response.data;
+      logger.info("Got answer", answer);
+      return answer && answer.data;
+    } catch (e) {
+      logger.error("Error while fetching answer", e);
+      return null; // log the error but still return
+    }
+  }
+
   static async getAllAnswers() {
     logger.info(`Getting all answers`);
     try {

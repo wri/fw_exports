@@ -125,7 +125,7 @@ class AnswerRouter {
       ctx.throw(400, "File type must be pdf or zip");
     }
 
-    const answer = await AnswerService.getAnswer({
+    const answer = await AnswerService.getAnswerWithUrl({
       reportid: answerId,
       templateid: answerId
     });
@@ -159,10 +159,19 @@ class AnswerRouter {
       let imageUrls = imageResponse.value ?? [];
       if (typeof imageUrls === "string") {
         imageUrls = [imageUrls];
+      } else if (Array.isArray(imageUrls)) {
+        imageUrls = imageUrls.map(url => (typeof url === "object" ? url.url : url));
+      } else if (typeof imageUrls === "object") {
+        imageUrls = [imageUrls.url];
       }
 
       for (const url of imageUrls) {
-        imagePromises.push(axios.get(url, { responseType: "arraybuffer" }).then(res => ({ data: res.data, url })));
+        const urlToDownload = typeof url === "object" ? url.url : url;
+        imagePromises.push(
+          axios
+            .get(urlToDownload, { responseType: "arraybuffer" })
+            .then(res => ({ data: res.data, url: urlToDownload }))
+        );
       }
     }
     const imageBuffers = await Promise.all(imagePromises);
@@ -183,8 +192,7 @@ class AnswerRouter {
     if (fileType === "pdf") {
       const imagesPdfInput = [];
       for (const buffer of imageBuffers) {
-        const fileExt = buffer.url.split("/").pop().split(".").pop();
-
+        const fileExt = buffer.url.split("/").pop().split(".").pop().split("?")[0];
         // Rotate images if they are in the wrong orientation (only for jpeg) as pdfgen does not do this
         if (fileExt === "jpeg" || fileExt === "jpg") {
           try {
