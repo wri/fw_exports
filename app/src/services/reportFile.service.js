@@ -540,10 +540,9 @@ class ReportFileService {
           }
         } else textToPrint = value;
 
-        doc
-          .font(isBurmese(textToPrint) ? "Burmese" : "Regular")
-          .fontSize(13)
-          .text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
+        doc.font(isBurmese(textToPrint) ? "Burmese" : "Regular")
+        doc.fontSize(13).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
+        doc.font("Regular")
       });
 
       doc.moveDown(1);
