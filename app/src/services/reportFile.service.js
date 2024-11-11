@@ -7,6 +7,7 @@ const PDFDocument = require("pdfkit");
 const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
 import logger from "../logger";
+import { isBurmese } from "../utils/isBurmese";
 
 const allowedFields = [
   "reportName",
@@ -497,6 +498,7 @@ class ReportFileService {
 
       doc.registerFont("Regular", "./app/src/services/font/NotoSansCJKjp-Regular.otf");
       doc.registerFont("Bold", "./app/src/services/font/NotoSansCJKjp-Bold.otf");
+      doc.registerFont("Burmese", "./app/src/services/font/NotoSansMyanmar-Regular.otf");
 
       doc.fontSize(14).text("Monitoring Report", 50, 80);
       doc.font("Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
@@ -537,8 +539,12 @@ class ReportFileService {
             textToPrint = `POINT (${value[0]?.toString().substring(0, 9)} ${value[1]?.toString().substring(0, 9)})`;
           }
         } else textToPrint = value;
+
+        doc.font(isBurmese(textToPrint) ? "Burmese" : "Regular");
         doc.fontSize(13).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
+        doc.font("Regular");
       });
+
       doc.moveDown(1);
       doc.moveTo(50, doc.y).lineTo(500, doc.y).stroke();
       doc.moveDown(1);
