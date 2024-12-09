@@ -498,7 +498,7 @@ class ReportFileService {
 
       doc.registerFont("Regular", "./app/src/services/font/NotoSansCJKjp-Regular.otf");
       doc.registerFont("Bold", "./app/src/services/font/NotoSansCJKjp-Bold.otf");
-      doc.registerFont("Burmese", "./app/src/services/font/NotoSansMyanmar-Regular.otf");
+      doc.registerFont("Burmese", "./app/src/services/font/NotoSansMyanmar-Regular.ttf");
 
       doc.fontSize(14).text("Monitoring Report", 50, 80);
       doc.font("Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
