@@ -584,7 +584,10 @@ class ReportFileService {
             doc.moveDown(1);
           });
         else {
-          doc.font(isBurmese(responseToShow) ? "Burmese" : "Regular").fontSize(11).text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
+          doc
+            .font(isBurmese(responseToShow) ? "Burmese" : "Regular")
+            .fontSize(11)
+            .text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
           doc.moveDown(1);
         }
       });
