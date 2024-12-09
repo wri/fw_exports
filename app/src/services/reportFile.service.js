@@ -498,7 +498,7 @@ class ReportFileService {
 
       doc.registerFont("Regular", "./app/src/services/font/NotoSansCJKjp-Regular.otf");
       doc.registerFont("Bold", "./app/src/services/font/NotoSansCJKjp-Bold.otf");
-      doc.registerFont("Burmese", "./app/src/services/font/NotoSansMyanmar-Regular.otf");
+      doc.registerFont("Burmese", "./app/src/services/font/NotoSansMyanmar-Regular.ttf");
 
       doc.fontSize(14).text("Monitoring Report", 50, 80);
       doc.font("Bold").fontSize(14).text(record.attributes.reportName.toUpperCase(), 50, 105);
@@ -584,7 +584,10 @@ class ReportFileService {
             doc.moveDown(1);
           });
         else {
-          doc.font("Regular").fontSize(11).text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
+          doc
+            .font(isBurmese(responseToShow) ? "Burmese" : "Regular")
+            .fontSize(11)
+            .text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
           doc.moveDown(1);
         }
       });
