@@ -1,8 +1,8 @@
 /**
- * Check if the text contains only Burmese characters
+ * Check if the text contains atleast one Burmese character
  * @param {String} text The text to check
- * @returns {Boolean} True if the text contains only Burmese characters, false otherwise
+ * @returns {Boolean} True if the text contains atleast one Burmese character, false otherwise
  */
-export function isBurmese(text) {
-  return /^[\u1000-\u109F\s]+$/.test(text);
+export function hasBurmese(text) {
+  return /[\u1000-\u109F]/.test(text);
 }

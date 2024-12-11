@@ -7,7 +7,7 @@ const PDFDocument = require("pdfkit");
 const ConvertService = require("./convert.service");
 //const GeostoreService = require("./geostore.service");
 import logger from "../logger";
-import { isBurmese } from "../utils/isBurmese";
+import { hasBurmese } from "../utils/isBurmese";
 
 const allowedFields = [
   "reportName",
@@ -540,7 +540,7 @@ class ReportFileService {
           }
         } else textToPrint = value;
 
-        doc.font(isBurmese(textToPrint) ? "Burmese" : "Regular");
+        doc.font(hasBurmese(textToPrint) ? "Burmese" : "Regular");
         doc.fontSize(13).text(textToPrint, 80 + 250 * (i % 2), 170 + ((i - (i % 2)) / 2) * 50);
         doc.font("Regular");
       });
@@ -585,7 +585,7 @@ class ReportFileService {
           });
         else {
           doc
-            .font(isBurmese(responseToShow) ? "Burmese" : "Regular")
+            .font(hasBurmese(responseToShow) ? "Burmese" : "Regular")
             .fontSize(11)
             .text(responseToShow, 50, doc.y, { underline: false }); //, lineY + 30 + 50 * i);
           doc.moveDown(1);
