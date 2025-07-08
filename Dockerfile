@@ -1,5 +1,5 @@
-FROM node:20
-MAINTAINER server@3sidedcube.com
+FROM node:22
+LABEL maintainer="server@3sidedcube.com"
 
 ENV NAME fw-exports
 
@@ -12,7 +12,7 @@ RUN yarn install
 COPY ./app ./app
 COPY ./config ./config
 COPY ./.babelrc ./
-COPY ./.eslintrc.yml ./.eslintrc.yml
+COPY ./.eslintrc.js ./
 COPY ./tsconfig.json ./
 RUN yarn build
 

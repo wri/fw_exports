@@ -19,10 +19,18 @@ const axios = require("axios");
 const jo = require("jpeg-autorotate");
 
 const router = new Router({
-  prefix: "/exports/reports"
+  prefix: "/exports/reports",
 });
 
-const exportFunction = async (id, payload, fields, templates, language, fileType, email) => {
+const exportFunction = async (
+  id,
+  payload,
+  fields,
+  templates,
+  language,
+  fileType,
+  email,
+) => {
   try {
     let file = "";
 
@@ -35,13 +43,23 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
         file = await ReportFileService.createShape(payload, fields);
         break;
       case "csv":
-        file = await ReportFileService.createCsv(payload, fields, templates, language);
+        file = await ReportFileService.createCsv(
+          payload,
+          fields,
+          templates,
+          language,
+        );
         break;
       case "fwbundle":
         file = await ReportFileService.createBundle(payload, templates);
         break;
       case "pdf":
-        file = await ReportFileService.createPDF(payload, templates, fields, language);
+        file = await ReportFileService.createPDF(
+          payload,
+          templates,
+          fields,
+          language,
+        );
         break;
       default:
         break;
@@ -53,14 +71,14 @@ const exportFunction = async (id, payload, fields, templates, language, fileType
       // read the zip file and upload to s3 bucket
       URL = await createShareableLink({
         extension: `.zip`,
-        body: zip.toBuffer()
+        body: zip.toBuffer(),
       });
     } else {
       // read the zip file and upload to s3 bucket
       logger.info("Uploading to S3");
       URL = await createShareableLink({
         extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-        body: file
+        body: file,
       });
     }
 
@@ -92,7 +110,11 @@ class AnswerRouter {
       if (!template.attributes.languages.includes(ctx.request.body.language))
         ctx.throw(400, "Please enter a valid language for all templates");
     }); */
-    if (!["csv", "fwbundle", "geojson", "shp", "pdf"].includes(ctx.request.body.fileType))
+    if (
+      !["csv", "fwbundle", "geojson", "shp", "pdf"].includes(
+        ctx.request.body.fileType,
+      )
+    )
       ctx.throw(400, "Please enter a valid file type");
 
     exportFunction(
@@ -102,7 +124,7 @@ class AnswerRouter {
       ctx.templates,
       ctx.request.body.language,
       ctx.request.body.fileType,
-      ctx.request.body.email
+      ctx.request.body.email,
     );
 
     ctx.body = { data: objId };
@@ -127,7 +149,7 @@ class AnswerRouter {
 
     const answer = await AnswerService.getAnswerWithUrl({
       reportid: answerId,
-      templateid: answerId
+      templateid: answerId,
     });
     if (!answer) {
       ctx.throw(404, "Report not found");
@@ -140,11 +162,12 @@ class AnswerRouter {
 
     // Flatten the array of questions so questions and child questions are at the same nesting and get their type
     const flatQuestionTypes = questions.reduce((acc, question) => {
-      const childQuestionTypes = question.childQuestions?.map(q => q.type) ?? [];
+      const childQuestionTypes =
+        question.childQuestions?.map((q) => q.type) ?? [];
       return [...acc, question.type, ...childQuestionTypes];
     }, []);
 
-    const isImageType = type => type === "blob";
+    const isImageType = (type) => type === "blob";
     const imageResponses = flatQuestionTypes
       .reduce((acc, type, i) => {
         if (isImageType(type)) {
@@ -152,7 +175,7 @@ class AnswerRouter {
         }
         return acc;
       }, [])
-      .map(i => responses[i]);
+      .map((i) => responses[i]);
 
     const imagePromises = [];
     for (const imageResponse of imageResponses) {
@@ -160,7 +183,9 @@ class AnswerRouter {
       if (typeof imageUrls === "string") {
         imageUrls = [imageUrls];
       } else if (Array.isArray(imageUrls)) {
-        imageUrls = imageUrls.map(url => (typeof url === "object" ? url.url : url));
+        imageUrls = imageUrls.map((url) =>
+          typeof url === "object" ? url.url : url,
+        );
       } else if (typeof imageUrls === "object") {
         imageUrls = [imageUrls.url];
       }
@@ -170,7 +195,7 @@ class AnswerRouter {
         imagePromises.push(
           axios
             .get(urlToDownload, { responseType: "arraybuffer" })
-            .then(res => ({ data: res.data, url: urlToDownload }))
+            .then((res) => ({ data: res.data, url: urlToDownload })),
         );
       }
     }
@@ -183,7 +208,7 @@ class AnswerRouter {
         const fileExt = buffer.url.split("/").pop().split(".").pop();
         return {
           data: buffer.data,
-          name: `img-${i}.${fileExt}`
+          name: `img-${i}.${fileExt}`,
         };
       });
       exportBuffer = await FileService.createArchive(imagesArchiveInput);
@@ -192,26 +217,36 @@ class AnswerRouter {
     if (fileType === "pdf") {
       const imagesPdfInput = [];
       for (const buffer of imageBuffers) {
-        const fileExt = buffer.url.split("/").pop().split(".").pop().split("?")[0];
+        const fileExt = buffer.url
+          .split("/")
+          .pop()
+          .split(".")
+          .pop()
+          .split("?")[0];
         // Rotate images if they are in the wrong orientation (only for jpeg) as pdfgen does not do this
         if (fileExt === "jpeg" || fileExt === "jpg") {
           try {
-            buffer.data = await jo.rotate(buffer.data).then(res => res.buffer);
+            buffer.data = await jo
+              .rotate(buffer.data)
+              .then((res) => res.buffer);
           } catch (e) {
             logger.error("Could not rotate image", e.message);
           }
         }
         imagesPdfInput.push({ data: buffer.data });
       }
-      exportBuffer = await FileService.createImagesPDF(answer.attributes.reportName, imagesPdfInput);
+      exportBuffer = await FileService.createImagesPDF(
+        answer.attributes.reportName,
+        imagesPdfInput,
+      );
     }
 
     const id = objectId;
 
     createShareableLink({
       extension: `.${fileType}`,
-      body: exportBuffer
-    }).then(URL => {
+      body: exportBuffer,
+    }).then((URL) => {
       const URLModel = new BucketURLModel({ id: id, URL: URL });
       URLModel.save();
     });
@@ -220,7 +255,7 @@ class AnswerRouter {
   static async exportImages(ctx) {
     const id = new ObjectId();
 
-    AnswerRouter.exportImagesHandler(ctx, id).catch(e => {
+    AnswerRouter.exportImagesHandler(ctx, id).catch((e) => {
       const URLModel = new BucketURLModel({ id: id, URL: e.message });
       URLModel.save();
     });
@@ -254,12 +289,15 @@ const getTemplates = async (ctx, next) => {
   for await (const answer of ctx.payload) {
     let templateId = answer.attributes.report;
     // do we already have that template?
-    const existing = templates.find(template => template.id === templateId);
+    const existing = templates.find((template) => template.id === templateId);
     if (!existing) {
       const template = await AnswerService.getTemplate(templateId);
-      answer.attributes.templateName = template.attributes.name[ctx.request.body.language];
+      answer.attributes.templateName =
+        template.attributes.name[ctx.request.body.language];
       templates.push(template);
-    } else answer.attributes.templateName = existing.attributes.name[ctx.request.body.language];
+    } else
+      answer.attributes.templateName =
+        existing.attributes.name[ctx.request.body.language];
   }
   ctx.templates = templates;
   await next();
@@ -271,7 +309,7 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 
   const user = {
     ...(query.loggedUser ? JSON.parse(query.loggedUser) : {}),
-    ...body.loggedUser
+    ...body.loggedUser,
   };
 
   if (!user || !user.id) {
@@ -282,8 +320,24 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 };
 
 router.get("/:id", isAuthenticatedMiddleware, AnswerRouter.getUrl);
-router.post("/exportSome", isAuthenticatedMiddleware, getAnswerSet, getTemplates, AnswerRouter.export);
-router.post("/exportAll", isAuthenticatedMiddleware, getAllAnswers, getTemplates, AnswerRouter.export);
-router.post("/:id/images", isAuthenticatedMiddleware, AnswerRouter.exportImages);
+router.post(
+  "/exportSome",
+  isAuthenticatedMiddleware,
+  getAnswerSet,
+  getTemplates,
+  AnswerRouter.export,
+);
+router.post(
+  "/exportAll",
+  isAuthenticatedMiddleware,
+  getAllAnswers,
+  getTemplates,
+  AnswerRouter.export,
+);
+router.post(
+  "/:id/images",
+  isAuthenticatedMiddleware,
+  AnswerRouter.exportImages,
+);
 
 export default router;

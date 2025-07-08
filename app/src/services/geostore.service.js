@@ -14,8 +14,8 @@ class GeostoreService {
         url: `/geostore/${geostoreId}`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const geostore = response.data;
       logger.info("Got geostore", geostore);
