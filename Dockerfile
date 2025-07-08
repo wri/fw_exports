@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:22
 MAINTAINER server@3sidedcube.com
 
 ENV NAME fw-exports
