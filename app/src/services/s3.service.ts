@@ -1,4 +1,9 @@
-import { S3Client, PutObjectCommand, PutObjectCommandInput, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  PutObjectCommandInput,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import config from "config";
@@ -8,8 +13,8 @@ const s3Client = new S3Client({
   region: config.get("s3.region"),
   credentials: {
     accessKeyId: config.get("s3.accessKeyId"),
-    secretAccessKey: config.get("s3.secretAccessKey")
-  }
+    secretAccessKey: config.get("s3.secretAccessKey"),
+  },
 });
 
 interface IConfig {
@@ -24,7 +29,7 @@ const createShareableLink = async ({ extension, body }: IConfig) => {
     Key: `${config.get("s3.folder")}/${uuid()}${extension}`,
     // Content of the new object.
     Body: body,
-    ACL: "public-read"
+    ACL: "public-read",
   };
 
   try {
@@ -44,7 +49,7 @@ const createShareableLink = async ({ extension, body }: IConfig) => {
 
     // Create the presigned URL.
     return await getSignedUrl(s3Client, command, {
-      expiresIn: 60 * 60 * 24 * 7 // 7 days
+      expiresIn: 60 * 60 * 24 * 7, // 7 days
     });
   } catch (err) {
     logger.error("Error creating presigned URL", err);

@@ -14,7 +14,7 @@ export class FileService {
     const writeStreamBuffer = new streamBuffers.WritableStreamBuffer();
 
     archive.pipe(writeStreamBuffer);
-    archive.on("error", error => {
+    archive.on("error", (error) => {
       throw error;
     });
 

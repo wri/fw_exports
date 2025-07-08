@@ -21,13 +21,13 @@ class FileService {
       reports: [],
       manifest: {
         layerFiles: [],
-        reportFiles: []
-      }
+        reportFiles: [],
+      },
     };
 
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -41,30 +41,35 @@ class FileService {
       for await (const record of payload) {
         const newRecord = {
           ...record.attributes,
-          id: record.id
+          id: record.id,
         };
         delete newRecord.reportTemplate;
 
         if (!record.attributes.geostore.geojson) {
-          let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+          let geojsonResponse = await GeostoreService.getGeostore(
+            record.attributes.geostore,
+          );
           newRecord.geostore = geojsonResponse;
         }
 
         // get alerts for each area dataset
         for await (const dataset of newRecord.datasets) {
           // get alerts
-          const alerts = await AlertService.getAlerts(dataset.slug, newRecord.geostore.id);
+          const alerts = await AlertService.getAlerts(
+            dataset.slug,
+            newRecord.geostore.id,
+          );
           bundle.alerts.push(
-            ...alerts.map(alert => {
+            ...alerts.map((alert) => {
               return {
                 areaId: newRecord.id,
                 slug: dataset.slug,
                 long: alert.longitude,
                 lat: alert.latitude,
                 date: alert.date,
-                confidence: alert.confidence
+                confidence: alert.confidence,
               };
-            })
+            }),
           );
         }
 
@@ -90,7 +95,7 @@ class FileService {
   static async createGeojson(payload) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -102,7 +107,7 @@ class FileService {
 
     let geojsonFile = {
       type: "FeatureCollection",
-      features: []
+      features: [],
     };
 
     // loop over records
@@ -110,23 +115,25 @@ class FileService {
       let geojson;
       // pull down geojson info
       if (!record.attributes.geostore.geojson) {
-        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        let geojsonResponse = await GeostoreService.getGeostore(
+          record.attributes.geostore,
+        );
         geojson = { ...geojsonResponse.geojson };
-        geojson.features.forEach(feature => {
+        geojson.features.forEach((feature) => {
           feature.properties = {
             id: record.id,
             ...record.attributes,
-            geostore: null
+            geostore: null,
           };
           geojsonFile.features.push(feature);
         });
       } else if (record.attributes.geostore.geojson) {
         geojson = { ...record.attributes.geostore.geojson };
-        geojson.features.forEach(feature => {
+        geojson.features.forEach((feature) => {
           feature.properties = {
             id: record.id,
             ...record.attributes,
-            geostore: null
+            geostore: null,
           };
           geojsonFile.features.push(feature);
         });
@@ -147,7 +154,7 @@ class FileService {
   static async createCsv(payload) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -182,24 +189,28 @@ class FileService {
       "subscriptionId",
       "email",
       "language",
-      "confirmed"
+      "confirmed",
     ];
     // loop over records
     for await (const record of payload) {
       let row = {
         id: record.id,
-        ...record.attributes
+        ...record.attributes,
       };
 
       let geojson;
       if (!record.attributes.geostore.geojson) {
-        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        let geojsonResponse = await GeostoreService.getGeostore(
+          record.attributes.geostore,
+        );
         geojson = geojsonResponse.geojson;
         if (geojson.features) {
           geojson.features.forEach((feature, index) => {
             let featureName = "feature" + index.toString();
             // turn coordinates into simpler array
-            let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+            let simpleCoords = feature.geometry.coordinates[0].map(
+              (coords) => `${coords[0]} ${coords[1]}`,
+            );
             let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
             row[featureName] = wkt;
             if (!fields.includes(featureName)) fields.push(featureName);
@@ -212,7 +223,9 @@ class FileService {
         geojson.features.forEach((feature, index) => {
           let featureName = "feature" + index.toString();
           // turn coordinates into simpler array
-          let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+          let simpleCoords = feature.geometry.coordinates[0].map(
+            (coords) => `${coords[0]} ${coords[1]}`,
+          );
           let wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
           row[featureName] = wkt;
           if (!fields.includes(featureName)) fields.push(featureName);
@@ -237,7 +250,7 @@ class FileService {
   static async createShape(payload) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -288,17 +301,19 @@ class FileService {
 
     let shapeArray = {
       type: "FeatureCollection",
-      features: []
+      features: [],
     };
     for await (const record of payload) {
       let geojson;
       if (!record.attributes.geostore.geojson) {
-        let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+        let geojsonResponse = await GeostoreService.getGeostore(
+          record.attributes.geostore,
+        );
         geojson = geojsonResponse.geojson;
-        geojson.features.forEach(feature => {
+        geojson.features.forEach((feature) => {
           feature.properties = {
             id: record.id.toString(),
-            ...record.attributes
+            ...record.attributes,
           };
         });
         shapeArray.features.push(...geojson.features);
@@ -308,12 +323,12 @@ class FileService {
       }
       if (record.attributes.geostore.geojson) {
         geojson = record.attributes.geostore.geojson;
-        geojson.features.forEach(feature => {
+        geojson.features.forEach((feature) => {
           feature.properties = {
             id: record.id.toString(),
             name: record.attributes.name.toString(),
             createdAt: record.attributes.createdAt.toString(),
-            image: record.attributes.image.toString()
+            image: record.attributes.image.toString(),
           };
         });
         shapeArray.features.push(...geojson.features);
@@ -323,7 +338,7 @@ class FileService {
       }
     }
     let shpfile = await ConvertService.geojsonToShp(shapeArray);
-    // eslint-disable-next-line prettier/prettier
+
     //console.log("******",othershpfile)
     archive.append(shpfile, { name: "areas.zip" });
     /*     let shpfile = shpwrite.zip(shapeArray);

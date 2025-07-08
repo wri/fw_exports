@@ -10,7 +10,7 @@ const koaBody = require("koa-body")({
   multipart: true,
   jsonLimit: "50mb",
   formLimit: "50mb",
-  textLimit: "50mb"
+  textLimit: "50mb",
 });
 
 const app = new Koa();
@@ -35,7 +35,7 @@ const mongoURL =
   `/${config.get("mongodb.database")}` +
   "?authSource=admin";
 
-const onDbReady = err => {
+const onDbReady = (err) => {
   if (err) {
     logger.error(err);
     throw new Error(err);
@@ -52,6 +52,8 @@ app.use(async (ctx, next) => {
 loaderRoutes(app);
 
 const port = config.get("service.port");
-const server = app.listen(port, () => logger.debug("Listening on PORT: %s", port));
+const server = app.listen(port, () =>
+  logger.debug("Listening on PORT: %s", port),
+);
 
 export default server;

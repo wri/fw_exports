@@ -18,7 +18,7 @@ const allowedFields = [
   "createdAt",
   "createdBy",
   "areaName",
-  "geostore"
+  "geostore",
 ];
 
 class AssignementsFileService {
@@ -37,13 +37,13 @@ class AssignementsFileService {
       reports: [],
       manifest: {
         layerFiles: [],
-        reportFiles: []
-      }
+        reportFiles: [],
+      },
     };
 
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -57,22 +57,27 @@ class AssignementsFileService {
       for await (const record of payload) {
         const newRecord = {
           ...record.attributes,
-          id: record.id
+          id: record.id,
         };
 
         if (typeof record.attributes.geostore === "string") {
-          let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+          let geojsonResponse = await GeostoreService.getGeostore(
+            record.attributes.geostore,
+          );
           newRecord.geostore = geojsonResponse;
         }
 
-        if (record.attributes.image && record.attributes.image.startsWith("https://s3.amazonaws.com")) {
+        if (
+          record.attributes.image &&
+          record.attributes.image.startsWith("https://s3.amazonaws.com")
+        ) {
           const imageURL = record.attributes.image;
           if (payload.length < 20) {
             // download the file
             const file = await axios({
               url: imageURL,
               responseType: "stream",
-              responseEncoding: "utf-8"
+              responseEncoding: "utf-8",
             });
             const fileName = imageURL;
             const [fileExtension] = fileName.split(".").slice(-1);
@@ -105,7 +110,7 @@ class AssignementsFileService {
   static async createGeojson(payload) {
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -117,7 +122,7 @@ class AssignementsFileService {
 
     let geojsonFile = {
       type: "FeatureCollection",
-      features: []
+      features: [],
     };
 
     // loop over records
@@ -126,47 +131,54 @@ class AssignementsFileService {
       if (record.attributes.geostore) {
         // pull down geojson info
         if (!record.attributes.geostore.geojson) {
-          let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+          let geojsonResponse = await GeostoreService.getGeostore(
+            record.attributes.geostore,
+          );
           geojson = { ...geojsonResponse.geojson };
-          geojson.features.forEach(feature => {
+          geojson.features.forEach((feature) => {
             feature.properties = {
               id: record.id,
               ...record.attributes,
-              geostore: null
+              geostore: null,
             };
             geojsonFile.features.push(feature);
           });
         } else if (record.attributes.geostore.geojson) {
           geojson = { ...record.attributes.geostore.geojson };
-          geojson.features.forEach(feature => {
+          geojson.features.forEach((feature) => {
             feature.properties = {
               id: record.id,
               ...record.attributes,
-              geostore: null
+              geostore: null,
             };
             geojsonFile.features.push(feature);
           });
         }
-      } else if (record.attributes.location && Array.isArray(record.attributes.location)) {
-        record.attributes.location.forEach(location => {
+      } else if (
+        record.attributes.location &&
+        Array.isArray(record.attributes.location)
+      ) {
+        record.attributes.location.forEach((location) => {
           const feature = {
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [location.lat, location.lon]
+              coordinates: [location.lat, location.lon],
             },
             properties: {
               id: record.id,
               ...record.attributes,
               alertType: location.alertType,
-              location: null
-            }
+              location: null,
+            },
           };
           geojsonFile.features.push(feature);
         });
       }
     }
-    archive.append(JSON.stringify(geojsonFile), { name: `assignments.geojson` });
+    archive.append(JSON.stringify(geojsonFile), {
+      name: `assignments.geojson`,
+    });
     archive.finalize();
 
     return new Promise((resolve, reject) => {
@@ -187,7 +199,7 @@ class AssignementsFileService {
 
     var myWritableStreamBuffer = new streamBuffers.WritableStreamBuffer({
       initialSize: 100 * 1024, // start at 100 kilobytes.
-      incrementAmount: 10 * 1024 // grow by 10 kilobytes each time buffer overflows.
+      incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
     });
 
     const archive = archiver("zip");
@@ -201,13 +213,15 @@ class AssignementsFileService {
     for await (const record of payload) {
       let row = {
         id: record.id,
-        ...record.attributes
+        ...record.attributes,
       };
 
       let geojson;
       if (record.attributes.geostore) {
         if (!record.attributes.geostore.geojson) {
-          let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+          let geojsonResponse = await GeostoreService.getGeostore(
+            record.attributes.geostore,
+          );
           geojson = geojsonResponse.geojson;
           if (geojson.features) {
             geojson.features.forEach((feature, index) => {
@@ -215,9 +229,12 @@ class AssignementsFileService {
               // turn coordinates into simpler array
               let wkt = "";
               if (Array.isArray(feature.geometry.coordinates[0])) {
-                let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+                let simpleCoords = feature.geometry.coordinates[0].map(
+                  (coords) => `${coords[0]} ${coords[1]}`,
+                );
                 wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
-              } else wkt = `${feature.geometry.type.toUpperCase()}((${feature.geometry.coordinates.join(",")}))`;
+              } else
+                wkt = `${feature.geometry.type.toUpperCase()}((${feature.geometry.coordinates.join(",")}))`;
               row[featureName] = wkt;
               if (!fields.includes(featureName)) fields.push(featureName);
             });
@@ -231,9 +248,12 @@ class AssignementsFileService {
             // turn coordinates into simpler array
             let wkt = "";
             if (Array.isArray(feature.geometry.coordinates[0])) {
-              let simpleCoords = feature.geometry.coordinates[0].map(coords => `${coords[0]} ${coords[1]}`);
+              let simpleCoords = feature.geometry.coordinates[0].map(
+                (coords) => `${coords[0]} ${coords[1]}`,
+              );
               wkt = `${feature.geometry.type.toUpperCase()}((${simpleCoords.join(",")}))`;
-            } else wkt = `${feature.geometry.type.toUpperCase()}((${feature.geometry.coordinates.join(",")}))`;
+            } else
+              wkt = `${feature.geometry.type.toUpperCase()}((${feature.geometry.coordinates.join(",")}))`;
             row[featureName] = wkt;
             if (!fields.includes(featureName)) fields.push(featureName);
           });
@@ -260,52 +280,59 @@ class AssignementsFileService {
 
     let shapeArray = {
       type: "FeatureCollection",
-      features: []
+      features: [],
     };
     for await (const record of payload) {
       let geojson;
       if (record.attributes.geostore) {
         if (!record.attributes.geostore.geojson) {
-          let geojsonResponse = await GeostoreService.getGeostore(record.attributes.geostore);
+          let geojsonResponse = await GeostoreService.getGeostore(
+            record.attributes.geostore,
+          );
           geojson = geojsonResponse.geojson;
-          geojson.features.forEach(feature => {
+          geojson.features.forEach((feature) => {
             feature.properties = {
               id: record.id.toString(),
-              ...Object.values(record.attributes).map(attribute => {
-                if (typeof attribute === "object") return JSON.stringify(attribute);
+              ...Object.values(record.attributes).map((attribute) => {
+                if (typeof attribute === "object")
+                  return JSON.stringify(attribute);
                 else return attribute;
-              })
+              }),
             };
           });
           shapeArray.features.push(...geojson.features);
         }
         if (record.attributes.geostore.geojson) {
           geojson = record.attributes.geostore.geojson;
-          geojson.features.forEach(feature => {
+          geojson.features.forEach((feature) => {
             feature.properties = {
               id: record.id.toString(),
-              ...Object.values(record.attributes).map(attribute => {
-                if (typeof attribute === "object") return JSON.stringify(attribute);
+              ...Object.values(record.attributes).map((attribute) => {
+                if (typeof attribute === "object")
+                  return JSON.stringify(attribute);
                 else return attribute;
-              })
+              }),
             };
           });
           shapeArray.features.push(...geojson.features);
         }
-      } else if (record.attributes.location && Array.isArray(record.attributes.location)) {
-        record.attributes.location.forEach(location => {
+      } else if (
+        record.attributes.location &&
+        Array.isArray(record.attributes.location)
+      ) {
+        record.attributes.location.forEach((location) => {
           const feature = {
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [location.lon, location.lat]
+              coordinates: [location.lon, location.lat],
             },
             properties: {
               id: record.id,
               ...record.attributes,
               alertType: location.alertType,
-              location: null
-            }
+              location: null,
+            },
           };
           shapeArray.features.push(feature);
         });

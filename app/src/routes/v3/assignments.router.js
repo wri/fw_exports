@@ -16,7 +16,7 @@ const AdmZip = require("adm-zip");
 const AssignmentService = require("../../services/assignments.service");
 
 const router = new Router({
-  prefix: "/exports/assignments"
+  prefix: "/exports/assignments",
 });
 
 const exportFunction = async (id, payload, fields, fileType, email) => {
@@ -47,14 +47,14 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
       // read the zip file and upload to s3 bucket
       URL = await createShareableLink({
         extension: `.zip`,
-        body: zip.toBuffer()
+        body: zip.toBuffer(),
       });
     } else {
       // read the zip file and upload to s3 bucket
       logger.info("Uploading to S3");
       URL = await createShareableLink({
         extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-        body: file
+        body: file,
       });
     }
 
@@ -85,10 +85,20 @@ class AssignmentRouter {
       if (!template.attributes.languages.includes(ctx.request.body.language))
         ctx.throw(400, "Please enter a valid language for all templates");
     }); */
-    if (!["csv", "fwbundle", "geojson", "shp", "pdf"].includes(ctx.request.body.fileType))
+    if (
+      !["csv", "fwbundle", "geojson", "shp", "pdf"].includes(
+        ctx.request.body.fileType,
+      )
+    )
       ctx.throw(400, "Please enter a valid file type");
 
-    exportFunction(objId, ctx.payload, ctx.request.body.fields, ctx.request.body.fileType, ctx.request.body.email);
+    exportFunction(
+      objId,
+      ctx.payload,
+      ctx.request.body.fields,
+      ctx.request.body.fileType,
+      ctx.request.body.email,
+    );
 
     ctx.body = { data: objId };
     ctx.status = 200;
@@ -119,7 +129,7 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 
   const user = {
     ...(query.loggedUser ? JSON.parse(query.loggedUser) : {}),
-    ...body.loggedUser
+    ...body.loggedUser,
   };
 
   if (!user || !user.id) {
@@ -130,7 +140,17 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 };
 
 router.get("/:id", isAuthenticatedMiddleware, AssignmentRouter.getUrl);
-router.post("/exportSome", isAuthenticatedMiddleware, getAssignmentSet, AssignmentRouter.export);
-router.post("/exportAll", isAuthenticatedMiddleware, getAllAssignments, AssignmentRouter.export);
+router.post(
+  "/exportSome",
+  isAuthenticatedMiddleware,
+  getAssignmentSet,
+  AssignmentRouter.export,
+);
+router.post(
+  "/exportAll",
+  isAuthenticatedMiddleware,
+  getAllAssignments,
+  AssignmentRouter.export,
+);
 
 export default router;

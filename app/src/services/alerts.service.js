@@ -5,7 +5,9 @@ const csv = require("csvtojson");
 
 class AlertService {
   static async getAlerts(dataset, geostoreId) {
-    logger.info(`Getting alerts for dataset ${dataset} and geostore ${geostoreId}`);
+    logger.info(
+      `Getting alerts for dataset ${dataset} and geostore ${geostoreId}`,
+    );
 
     // build url and query
     const datasets = {
@@ -15,8 +17,8 @@ class AlertService {
           confidenceKey: "umd_glad_landsat_alerts__confidence",
           dateKey: "umd_glad_landsat_alerts__date",
           requiresMaxDate: true,
-          tableName: "umd_glad_landsat_alerts"
-        }
+          tableName: "umd_glad_landsat_alerts",
+        },
       },
       glad_sentinel_2: {
         datastoreId: "umd_glad_sentinel2_alerts",
@@ -24,8 +26,8 @@ class AlertService {
           confidenceKey: "umd_glad_sentinel2_alerts__confidence",
           dateKey: "umd_glad_sentinel2_alerts__date",
           requiresMaxDate: true,
-          tableName: "umd_glad_sentinel2_alerts"
-        }
+          tableName: "umd_glad_sentinel2_alerts",
+        },
       },
       wur_radd_alerts: {
         datastoreId: "wur_radd_alerts",
@@ -33,17 +35,17 @@ class AlertService {
           confidenceKey: "wur_radd_alerts__confidence",
           dateKey: "wur_radd_alerts__date",
           requiresMaxDate: true,
-          tableName: "wur_radd_alerts"
-        }
+          tableName: "wur_radd_alerts",
+        },
       },
       viirs: {
         datastoreId: "nasa_viirs_fire_alerts",
         query: {
           dateKey: "alert__date",
           requiresMaxDate: false,
-          tableName: "mytable"
-        }
-      }
+          tableName: "mytable",
+        },
+      },
     };
 
     let apiConfig = datasets[dataset];
@@ -63,8 +65,8 @@ class AlertService {
         url,
         method: "GET",
         headers: {
-          "x-api-key": config.get("gfwApiKey.apiKey")
-        }
+          "x-api-key": config.get("gfwApiKey.apiKey"),
+        },
       });
 
       const alerts = response.data;
