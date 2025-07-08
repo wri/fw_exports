@@ -73,6 +73,6 @@
   },
   "prettier": "@3sidedcube/prettier-config",
   "engines": {
-    "node": "~20"
+    "node": "~22"
   }
 }
