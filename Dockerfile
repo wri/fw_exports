@@ -1,5 +1,5 @@
 FROM node:22
-MAINTAINER server@3sidedcube.com
+LABEL maintainer="server@3sidedcube.com"
 
 ENV NAME fw-exports
 
