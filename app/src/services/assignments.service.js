@@ -18,8 +18,8 @@ class AssignmentService {
         url: `/assignments/${assignmentId}`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const assignment = response.data;
       logger.info("Got assignment", assignment);
@@ -39,8 +39,8 @@ class AssignmentService {
         url: `/assignments/user`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const assignments = response.data;
       logger.info(`Got ${assignments.data.length} assignments`);

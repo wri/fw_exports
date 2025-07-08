@@ -18,8 +18,8 @@ export class AnswerService {
         url: `/templates/${id}`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const template = response.data;
       //logger.info("Got template", template);
@@ -37,7 +37,9 @@ export class AnswerService {
    */
   static async getAnswer(params) {
     const { templateid, reportid } = params;
-    logger.info(`Getting answer with id ${reportid} of template id ${templateid}`);
+    logger.info(
+      `Getting answer with id ${reportid} of template id ${templateid}`,
+    );
     try {
       const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
@@ -45,8 +47,8 @@ export class AnswerService {
         url: `/templates/${templateid}/answers/exports/${reportid}`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const answer = response.data;
       logger.info("Got answer", answer);
@@ -64,7 +66,9 @@ export class AnswerService {
    */
   static async getAnswerWithUrl(params) {
     const { templateid, reportid } = params;
-    logger.info(`Getting answer with id ${reportid} of template id ${templateid}`);
+    logger.info(
+      `Getting answer with id ${reportid} of template id ${templateid}`,
+    );
     try {
       const baseURL = config.get("coreAPI.url");
       const response = await axios.default({
@@ -72,8 +76,8 @@ export class AnswerService {
         url: `/templates/${templateid}/answers/imageExports/${reportid}`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const answer = response.data;
       logger.info("Got answer", answer);
@@ -93,8 +97,8 @@ export class AnswerService {
         url: `/templates/allAnswers`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const answers = response.data;
       logger.info(`Got ${answers.data.length} answers`);

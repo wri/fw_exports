@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 
 const BucketURLSchema = new Schema({
   id: { type: String, required: true },
-  URL: { type: String, required: true }
+  URL: { type: String, required: true },
 });
 
 BucketURLSchema.index({ id: 1 });

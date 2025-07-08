@@ -13,8 +13,8 @@ class AreaService {
         url: `/areas/${areaId}`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const area = response.data;
       logger.info("Got area", area);
@@ -33,8 +33,8 @@ class AreaService {
         url: `/areas/userAndTeam`,
         method: "GET",
         headers: {
-          authorization: loggedInUserService.token
-        }
+          authorization: loggedInUserService.token,
+        },
       });
       const areas = response.data;
       logger.info("Got areas", areas);

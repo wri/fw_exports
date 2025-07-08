@@ -12,7 +12,7 @@ RUN yarn install
 COPY ./app ./app
 COPY ./config ./config
 COPY ./.babelrc ./
-COPY ./.eslintrc.yml ./.eslintrc.yml
+COPY ./.eslintrc.js ./
 COPY ./tsconfig.json ./
 RUN yarn build
 

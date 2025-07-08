@@ -16,7 +16,7 @@ const SparkpostService = require("../../services/sparkpost.service");
 const AdmZip = require("adm-zip");
 
 const router = new Router({
-  prefix: "/exports/areas"
+  prefix: "/exports/areas",
 });
 
 const exportFunction = async (id, payload, fields, fileType, email) => {
@@ -47,13 +47,13 @@ const exportFunction = async (id, payload, fields, fileType, email) => {
       // read the zip file and upload to s3 bucket
       URL = await createShareableLink({
         extension: `.zip`, // `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-        body: zip.toBuffer()
+        body: zip.toBuffer(),
       });
     } else {
       // read the zip file and upload to s3 bucket
       URL = await createShareableLink({
         extension: `.${fileType === "fwbundle" ? "gfwbundle" : "zip"}`,
-        body: file
+        body: file,
       });
     }
 
@@ -79,13 +79,21 @@ class AreaRouter {
   }
 
   static async export(ctx) {
-    if (!["csv", "fwbundle", "geojson", "shp"].includes(ctx.request.body.fileType))
+    if (
+      !["csv", "fwbundle", "geojson", "shp"].includes(ctx.request.body.fileType)
+    )
       ctx.throw(400, "Please enter a valid file type");
     const fields = ctx.request.body.fields || [];
 
     const objId = new ObjectId();
 
-    exportFunction(objId, ctx.payload, fields, ctx.request.body.fileType, ctx.request.body.email);
+    exportFunction(
+      objId,
+      ctx.payload,
+      fields,
+      ctx.request.body.fileType,
+      ctx.request.body.email,
+    );
 
     ctx.body = { data: objId };
     ctx.status = 200;
@@ -105,9 +113,11 @@ const getAreas = async (ctx, next) => {
 
   // go through areas and remove duplicates
   let uniqueAreas = [];
-  areas.forEach(area => {
+  areas.forEach((area) => {
     // find that area in unique area array
-    let existingArea = uniqueAreas.find(uniqueArea => uniqueArea.id.toString() === area.id.toString());
+    let existingArea = uniqueAreas.find(
+      (uniqueArea) => uniqueArea.id.toString() === area.id.toString(),
+    );
     if (!existingArea) uniqueAreas.push(area);
   });
 
@@ -121,7 +131,7 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 
   const user = {
     ...(query.loggedUser ? JSON.parse(query.loggedUser) : {}),
-    ...body.loggedUser
+    ...body.loggedUser,
   };
 
   if (!user || !user.id) {
@@ -132,7 +142,17 @@ const isAuthenticatedMiddleware = async (ctx, next) => {
 };
 
 router.get("/:id", isAuthenticatedMiddleware, AreaRouter.getUrl);
-router.post("/exportOne/:areaid", isAuthenticatedMiddleware, getArea, AreaRouter.export);
-router.post("/exportAll", isAuthenticatedMiddleware, getAreas, AreaRouter.export);
+router.post(
+  "/exportOne/:areaid",
+  isAuthenticatedMiddleware,
+  getArea,
+  AreaRouter.export,
+);
+router.post(
+  "/exportAll",
+  isAuthenticatedMiddleware,
+  getAreas,
+  AreaRouter.export,
+);
 
 export default router;
